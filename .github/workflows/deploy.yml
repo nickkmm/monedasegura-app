@@ -1,0 +1,14 @@
+name: deploy
+
+# On every merge to main, redeploy the whole stack using the shared workflow in
+# monedasegura-infra (scripts/deploy.sh over SSH). Skips until the DEPLOY_* secrets exist.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: nickkmm/monedasegura-infra/.github/workflows/deploy.yml@main
+    secrets: inherit
