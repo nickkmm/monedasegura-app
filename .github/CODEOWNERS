@@ -1,3 +1,4 @@
-# Nicolás (@nickkmm) must approve everything that reaches main.
-# On develop any teammate can approve (develop's protection does not require a code owner).
-*  @nickkmm
+# Owners of this repo (Juan José, Santiago): GitHub asks one of them to review every PR.
+# On develop, one approval from any teammate is enough.
+# main only accepts develop → main merged by Nicolás (@nickkmm): a ruleset lets only repo admins update it.
+*  @Jujoroco06 @Gomaxd11
