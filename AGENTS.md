@@ -19,6 +19,16 @@ The shared specification lives in the sibling repo `../monedasegura-infra/docs/`
 
 If the code and those documents disagree, the documents win: change them first with a PR against `monedasegura-infra`, then the code.
 
+**If `../monedasegura-infra` does not exist, stop and set up the workspace before doing anything else** — never guess a contract, a feature name or a table:
+
+```bash
+# from the folder that contains this repo
+git clone https://github.com/nickkmm/monedasegura-infra.git
+sh monedasegura-infra/scripts/bootstrap-workspace.sh
+```
+
+The repos are not linked through git; they only rely on being sibling folders inside one workspace folder (e.g. `SecureMoney/`).
+
 ## Language policy (this repo is the exception)
 - **User-facing text is in Spanish**: labels, buttons, messages, errors shown to the user, screen titles.
 - **Everything else is in English**: code, identifiers, file names, comments, logs, tests, docs, commit messages, PR titles and descriptions.
