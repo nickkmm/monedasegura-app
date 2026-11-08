@@ -11,3 +11,7 @@ pubspec_overrides.yaml
 .vscode/
 *.iml
 .DS_Store
+
+# Software factory: runtime state and job worktrees (local only)
+/factory/jobs/
+/.worktrees/
