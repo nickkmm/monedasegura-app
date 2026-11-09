@@ -1,72 +1,71 @@
 ESCALATE
 
 ## Summary
-- The rule editor is built and works against the in-memory store. The gate and all four reviews passed, and CI on PR #51 is green.
-- I recommend not merging yet. The screen shows backtest data that `decision-api.yaml` doesn't have, and it gates the approval actions by permission and four-eyes, so a person has to check both.
-- Intake rewrote three of the issue's acceptance criteria. The approver shown to Laura is "Valentina Ríos", not the issue's "Diego Salazar", and that needs confirming.
-- #21 is now on `develop`, so the branch's test for criterion 4 is out of date. I ran the missing list check on a temporary merged copy and it passes.
+- Round 2 made the four changes from feedback 1, and all of them are in the code. The gate, all four reviews and CI on `cee1ad2` pass.
+- The recall tile, the "últimos 30 días" heading, the approver and criterion 7 were settled by @Gomaxd11 in feedback 1, so they are no longer open questions.
+- I still recommend not merging yet. This screen exposes the approval flow, and no person has confirmed the permission gating. Feedback 1 didn't cover it.
+- No one has walked through the screen in a browser yet. That walk-through can also confirm the gating.
 
 ## Why
-The build meets its spec, and the code keeps the page free of store access with every action going through the store. Two project checks still apply: the "Recall total" tile and the "últimos 30 días" heading differ from the contract, and the change touches permission and four-eyes gating. Intake said no contract change was needed, and no review raised the difference, so a person should decide it.
+The build meets its spec as amended by feedback 1, and the change stays inside intake's Scope. The project's check for anything touching permissions still applies, and only a person can clear it. The contract difference also remains in the code, but a person has accepted it for the prototype.
 
 ## Acceptance criteria
-Numbering follows the spec, which replaces the issue's wording for criteria 2, 6 and 7. Build evidence is the named tests. I re-ran `rule_editor_test.dart`, `mock_seed_test.dart` and `navigation_test.dart` on the branch, and all passed. I also read the page and screen against the spec.
+Numbering follows the spec, which replaces the issue's wording for criteria 2, 6 and 7. Unless noted, the evidence is the named widget test in build.md. I re-ran `rule_editor_test.dart`, `mock_seed_test.dart` and `navigation_test.dart` at `cee1ad2`, and all 82 tests passed. The gate and CI ran the full suite.
 
 1. Header and condition: met, by the widget test.
-2. Backtest: met, by the widget test, through a seed change to 0.742 and 0.773 so that "+3,1 pp" and "0,74 → 0,77" both read correctly. The recall values aren't in the contract (see below).
-3. Approval and versions: met, by the widget test.
-4. Approve: met under the spec's conditional, but out of date. The branch test asserts the store because `RulesScreen` was a stub at build time, and its comment still says so. PR #47 has since merged. On a temporary copy of the branch merged with `origin/develop`, a throwaway test approved v2, tapped "Reglas", and the NIGHT_TRANSFER row showed "Activa" and not "Pendiente". That test isn't in the PR.
+2. Backtest: met, by the widget test, using the seed values 0.742 and 0.773 so that "+3,1 pp" and "0,74 → 0,77" both read correctly. The tile and the heading differ from the contract, as accepted in feedback 1.
+3. Approval and versions: met, by the widget test. The pending event reads "Esperando a otra persona con permiso para aprobar" instead of the spec's text, as feedback 1 asked (`rule_editor_page.dart:438`).
+4. Approve: met. I read the test: after approving, it taps "Reglas" and asserts that the NIGHT_TRANSFER `RuleRow` shows "Activa" and not "Pendiente". The conditional from round 1 no longer applies.
 5. Return to draft: met, by the widget tests.
-6. Four eyes: met as rewritten by intake. Laura has no approve or return buttons and sees "Valentina Ríos"; Diego can approve. The issue says "Diego Salazar", so this differs from the issue's text.
-7. Backtest gate: met as rewritten by intake, on ATO_PASSWORD_RESET and FAR_FROM_HOME.
+6. Four eyes: met as rewritten by intake and confirmed in feedback 1. Laura has no approve or return buttons and sees "Valentina Ríos"; Diego can approve. I also read `canApprove` and `approversFor`, and both exclude the creator.
+7. Backtest gate: met as rewritten by intake and accepted in feedback 1, on ATO_PASSWORD_RESET and FAR_FROM_HOME.
 8. New version: met, by the widget test.
 9. Read-only user: met, by the widget test on all four rules.
 10. Selection: met, by the widget test.
 11. Without data: met, by the widget tests.
-12. Empty states: met. `navigation_test.dart` is unchanged and passes.
-13. Page isolation: met. I ran the grep myself, and `lib/screens/` matches only `*_screen.dart` files. The page-alone test passes.
+12. Empty states: met. `navigation_test.dart` isn't in the branch's diff and passes.
+13. Page isolation: met. I ran the grep, and in `lib/screens/` it matches only `*_screen.dart` files. The page-alone test passes.
 14. Seed: met. I re-ran `mock_seed_test.dart`.
 15. Formatter: met. I ran the grep on `condition_row.dart` and it finds nothing. `formatConditionValue` is in `format.dart`.
 
 Other results:
-- The final round says `GATE: PASS`, and all four reviews are `VERDICT: PASS`.
-- The change stays inside intake's Scope. No dependency, CI, deploy, Docker, migration or environment variable changes.
-- The branch merges cleanly with `origin/develop`. On that merged copy, `rules_test.dart`, `rule_editor_test.dart` and `mock_seed_test.dart` pass. I didn't run the full suite there.
+- Round 2 `checks.md` says `GATE: PASS` at `cee1ad2`, which is the branch head. All four round 2 reviews are `VERDICT: PASS`.
+- The code review's one note, about the PR body's "Still to do", is resolved: that section is gone. The other notes describe no blocking problem, and the ones worth a person's time are listed below.
+- CI's `ci` check succeeded on `cee1ad2`. The PR is mergeable and the branch has no commits missing from `origin/develop`.
+- Outside the factory record, the diff touches only the screen and page, the formatter move, the seed fix and their tests. The formatter move comes from the spec, not intake's Scope, and doesn't change `ConditionRow`'s behaviour.
+- There are no dependency, CI, deploy, Docker, migration or environment variable changes.
 
 ## For the human
 Recommendation: don't merge yet
 
-**Reasons, from the project's checks**
+**Reason: the change touches permissions, and a person hasn't checked them yet.** It doesn't change the store's rules, the route guards or `model.md`. It is the first screen to expose the approval flow, using `store.can(RULE_WRITE)` and `store.canApprove`.
 
-1. **The screen differs from the contract.** The issue asks for both of these, but `monedasegura-infra/docs/` doesn't support them, and `AGENTS.md` says the documents win.
-   - "Recall total" reads `systemRecallBefore` and `systemRecallAfter`. The `Backtest` schema in `decision-api.yaml` has neither field, and `lib/data/models/rule.dart` marks them "Prototype-only". Once the real API is connected, this tile can only show "—".
-   - "Backtest · últimos 30 días" names a window, but the contract's `runBacktest` evaluates "every resolved `fraud_case`".
-2. **It touches permissions.** The change doesn't alter the store's rules, but this is the first screen that exposes the approval flow, using `store.can(RULE_WRITE)` and `store.canApprove`. Please confirm the gating matches `model.md` §4 and §6.
+**What I need from you**
 
-**Decisions I need from you**
+1. **Confirm the gating matches `model.md` §4 and §6.** The automated evidence is good: the widget tests cover Valentina, Laura, Diego and Camilo, and the store checks permissions again on each action. This check is the one thing blocking my recommendation.
+2. **Decide who may return a version to draft.** `reject` requires `RULE_APPROVE` but, unlike `approve`, doesn't refuse the version's creator. The UI hides the button from the creator, so this branch doesn't expose the gap, and the store code isn't changed here. The `model.md` §6 table has no `PENDING_APPROVAL` to `DRAFT` step, although `decision-api.yaml` has `rejectRuleVersion`. This doesn't have to block the merge, but it should be settled in `monedasegura-infra` before the real API work.
+3. **Walk through the screen.** Run `flutter run -d chrome` and try approve, return to draft and new version as Valentina, Laura, Diego and Camilo. No agent has seen this screen running in a browser. Also check:
+   - The new pending event text at 1440 px. It wraps to two lines and wasn't rendered in round 2.
+   - The metric tiles at 1280 px, where the notes may wrap to three or four lines.
 
-1. **Contract:** either add the recall fields and the 30-day window to `decision-api.yaml` with a PR against `monedasegura-infra`, or change the tile and the heading here.
-2. **Approver:** is "Valentina Ríos" right for criterion 6? She is an ADMIN with `RULE_APPROVE`, and first in `approversFor`, so the code follows the rule and `model.md`. The timeline above her name still says "Esperando a otro líder de riesgo", and she isn't one.
-3. **Criterion 7:** do you accept that the disabled "Enviar a aprobación" is tested on ATO_PASSWORD_RESET, because FAR_FROM_HOME already has a seeded backtest?
-4. **Criterion 4:** should the test assert the `/rules` list before merging, now that #21 is on `develop`? It's a small change, and it would remove the out-of-date comment and the PR body's "Still to do".
+**Already decided, for the record**
 
-**Please check by hand**
-
-- Run `flutter run -d chrome` and walk through approve, return to draft and new version as Valentina, Laura, Diego and Camilo. No agent has seen this running in a browser.
-- At 1280 px, check the metric tiles, whose notes may wrap to three or four lines (from the UI review).
+Feedback 1 kept the recall tile and the "últimos 30 días" heading for the prototype, with no PR against `monedasegura-infra`. `AGENTS.md` says the documents win, so this is a deliberate exception:
+- `Backtest` in `decision-api.yaml` has no recall fields, so once the real API is connected this tile can only show "—".
+- `runBacktest` evaluates "every resolved `fraud_case`", not a 30-day window.
 
 **Smaller gaps, not blocking on their own**
 
-- Version rows use `GestureDetector`, with no keyboard focus or button semantics. The UI and UX reviews note the same gap elsewhere in the console.
+- Version rows use `GestureDetector`, with no keyboard focus or button semantics. The UI and UX reviews note this, and the UI review says the rest of the console has the same gap.
 - The "Motivo" field has no 1000-character limit. A longer reason shows the generic error and the typed text is lost.
 - "Aprobar y activar" activates at once, with no confirmation, as specified.
 - "Sin fraudes nuevos frente a la versión activa" and "No se pudo completar la acción." are new copy, not from the issue.
+- The PR body's "CI passes" box is still unticked, although CI is green.
 
 **Files to look at**
 
-- `lib/screens/rules/rule_editor_page.dart`: `_recallTile`, the backtest card heading, and `_ApprovalCard`
 - `lib/screens/rules/rule_editor_screen.dart`: permission flags and approver selection
-- `lib/data/models/rule.dart`: the prototype-only recall fields
-- `lib/data/mock/mock_seed.dart`: NIGHT_TRANSFER v2 recall
-- `test/screens/rule_editor_test.dart`: "approving activates v2 and keeps it selected"
-- `monedasegura-infra/docs/api/decision-api.yaml`: the `Backtest` schema and `runBacktest`
+- `lib/screens/rules/rule_editor_page.dart`: `_ApprovalCard` and `_writeAction`
+- `lib/data/app_store.dart`: `approve`, `reject`, `canApprove` and `approversFor` (not changed by this branch)
+- `test/screens/rule_editor_test.dart`: the four-eyes and read-only user tests
+- `monedasegura-infra/docs/model.md` §4 and §6, and `monedasegura-infra/docs/api/decision-api.yaml`: `rejectRuleVersion`
