@@ -30,6 +30,16 @@ String formatCop(int amount) => '\$ ${formatInt(amount)}';
 String formatDecimal(double v, {int digits = 2}) =>
     v.toStringAsFixed(digits).replaceAll('.', ',');
 
+/// Decimal comma, at most 2 decimals and no trailing zeros: 4.1 reads `4,1`
+/// and 412 reads `412`.
+String formatTrimmed(num v) {
+  final fixed = v.toStringAsFixed(2);
+  final trimmed = fixed.contains('.')
+      ? fixed.replaceFirst(RegExp(r'\.?0+$'), '')
+      : fixed;
+  return trimmed.replaceAll('.', ',');
+}
+
 String formatScore(double? score) =>
     score == null ? '—' : formatDecimal(score, digits: 2);
 
