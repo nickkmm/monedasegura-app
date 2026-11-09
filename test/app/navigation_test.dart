@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monedasegura_app/app/nav_destination.dart';
 import 'package:monedasegura_app/app/routes.dart';
@@ -53,6 +54,17 @@ Finder get _horizontalScrollView => find.byWidgetPredicate(
 );
 
 void main() {
+  // The default test font draws every glyph as a square, which makes the
+  // "Pendiente" badge on the rules screen wider than its 130 px cell; measure
+  // with Inter.
+  setUpAll(() async {
+    final loader = FontLoader('Inter');
+    for (final weight in ['Regular', 'Medium', 'SemiBold']) {
+      loader.addFont(rootBundle.load('assets/fonts/Inter-$weight.ttf'));
+    }
+    await loader.load();
+  });
+
   testWidgets('the sidebar shows only what the permissions allow', (
     tester,
   ) async {
