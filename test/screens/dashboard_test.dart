@@ -79,6 +79,9 @@ Future<_Calls> _pumpPage(
 }
 
 void main() {
+  // Opening the models screen lays out its table and feature bars.
+  setUpAll(loadInterFont);
+
   testWidgets('shows the subtitle and the KPIs from the store', (tester) async {
     await pumpApp(
       tester,

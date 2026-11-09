@@ -9,6 +9,7 @@ import 'package:monedasegura_app/screens/rules/rule_editor_screen.dart';
 import 'package:monedasegura_app/theme/app_colors.dart';
 import 'package:monedasegura_app/widgets/widgets.dart';
 
+import '../helpers/harness.dart';
 import '../helpers/pump_app.dart';
 
 const _valentina = 'valentina.rios@monedasegura.co';
@@ -57,6 +58,9 @@ Finder get _horizontalScrollView => find.ancestor(
 );
 
 void main() {
+  // Opening the models screen lays out its table and feature bars.
+  setUpAll(loadInterFont);
+
   testWidgets('the sidebar shows only what the permissions allow', (
     tester,
   ) async {

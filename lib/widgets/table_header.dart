@@ -23,16 +23,26 @@ class TableHeaderCell {
   final TextAlign align;
 }
 
-/// Table header: a 40 px band with the column labels, laid out with the
-/// same padding and gap as the rows below it.
+/// Table header: a band with the column labels, laid out with the same
+/// padding and gap as the rows below it.
 ///
-/// [cells] are the columns, left to right.
+/// [cells] are the columns, left to right. [height] is the band height (40
+/// by default), [horizontalPadding] the space before the first and after the
+/// last column (24 by default) and [radius] its corner radius (0, square, by
+/// default).
 class TableHeaderRow extends StatelessWidget {
-  const TableHeaderRow({super.key, required this.cells});
+  const TableHeaderRow({
+    super.key,
+    required this.cells,
+    this.height = 40,
+    this.horizontalPadding = AppSpacing.xl,
+    this.radius = 0,
+  });
 
   final List<TableHeaderCell> cells;
-
-  static const double _height = 40;
+  final double height;
+  final double horizontalPadding;
+  final double radius;
 
   Widget _cell(TableHeaderCell cell) {
     final text = Text(
@@ -50,9 +60,12 @@ class TableHeaderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: _height,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      color: AppColors.bgSubtle,
+      height: height,
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      decoration: BoxDecoration(
+        color: AppColors.bgSubtle,
+        borderRadius: BorderRadius.circular(radius),
+      ),
       child: Row(
         children: [
           for (var i = 0; i < cells.length; i++) ...[
