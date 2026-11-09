@@ -242,7 +242,10 @@ void main() {
       expect(find.text('20 oct · 5 días'), findsOneWidget);
       expect(find.text('Enviada a aprobación'), findsOneWidget);
       expect(find.text('hoy, 08:10'), findsOneWidget);
-      expect(find.text('Esperando a otro líder de riesgo'), findsOneWidget);
+      expect(
+        find.text('Esperando a otra persona con permiso para aprobar'),
+        findsOneWidget,
+      );
       expect(find.text('Quien la creó no puede aprobarla'), findsOneWidget);
       expect(
         find.descendant(
@@ -296,7 +299,7 @@ void main() {
     });
 
     testWidgets('approving activates v2 and keeps it selected', (tester) async {
-      final store = await _open(tester, _night, _valentina);
+      await _open(tester, _night, _valentina);
 
       await _tap(tester, _button('Aprobar y activar'));
 
@@ -307,10 +310,17 @@ void main() {
       expect(find.text('Aprobada por Valentina Ríos'), findsOneWidget);
       expect(_button('Aprobar y activar'), findsNothing);
 
-      // RulesScreen is still a stub on this base, so the list can't be read.
-      final view = store.ruleByCode(_night)!;
-      expect(view.version(2)!.status, RuleStatus.ACTIVE);
-      expect(view.version(1)!.status, RuleStatus.RETIRED);
+      await _tap(tester, _button('Reglas'));
+
+      final row = find.ancestor(
+        of: find.text(_night),
+        matching: find.byType(RuleRow),
+      );
+      expect(find.descendant(of: row, matching: find.text('Activa')), findsOne);
+      expect(
+        find.descendant(of: row, matching: find.text('Pendiente')),
+        findsNothing,
+      );
     });
 
     testWidgets('returning to draft asks for a reason', (tester) async {

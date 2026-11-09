@@ -435,7 +435,7 @@ class _ApprovalCard extends StatelessWidget {
         ),
       if (status == RuleStatus.PENDING_APPROVAL)
         const TimelineEvent(
-          title: 'Esperando a otro líder de riesgo',
+          title: 'Esperando a otra persona con permiso para aprobar',
           meta: 'Quien la creó no puede aprobarla',
         ),
       if ((status == RuleStatus.ACTIVE || status == RuleStatus.RETIRED) &&
