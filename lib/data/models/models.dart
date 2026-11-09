@@ -7,4 +7,5 @@ export 'feature_definition.dart';
 export 'fraud_case.dart';
 export 'model_version.dart';
 export 'rule.dart';
+export 'simulation_event.dart';
 export 'transaction.dart';
