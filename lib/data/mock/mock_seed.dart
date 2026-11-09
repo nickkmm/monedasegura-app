@@ -169,6 +169,12 @@ class MockSeed {
   /// A prototype value, not a real credential.
   static const demoPassword = 'MonedaSegura2026';
 
+  /// Latitude and longitude of each customer's home city.
+  static const homeCoordinates = _homeCoordinates;
+
+  /// The seed's id shape, for records created after it.
+  static String uuid(String group, int n) => _uuid(group, n);
+
   final List<AppUser> users;
   final List<Customer> customers;
   final List<Device> devices;
@@ -341,14 +347,14 @@ class MockSeed {
       version: versionNumber,
       action: version.action,
       matched: version.conditions.every(
-        (condition) => _holds(condition, features, score),
+        (condition) => conditionHolds(condition, features, score),
       ),
       shadow: version.status == RuleStatus.SHADOW,
     );
   }
 
   /// A rule on `score` never matches when the score is null.
-  static bool _holds(
+  static bool conditionHolds(
     Condition condition,
     Map<String, Object> features,
     double? score,
