@@ -523,8 +523,8 @@ void main() {
       expect(active.trueNegatives, 1848);
       expect(v2.backtest!.candidate.falseNegatives, 22);
       expect(v2.backtest!.candidate.trueNegatives, 1819);
-      expect(v2.backtest!.systemRecallBefore, 0.74);
-      expect(v2.backtest!.systemRecallAfter, 0.77);
+      expect(v2.backtest!.systemRecallBefore, 0.742);
+      expect(v2.backtest!.systemRecallAfter, 0.773);
     });
 
     test('NIGHT_TRANSFER v2 is created, then shadowed, then submitted', () {

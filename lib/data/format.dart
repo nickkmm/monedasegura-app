@@ -47,6 +47,18 @@ String formatScore(double? score) =>
 String formatPercent(double ratio, {int digits = 2}) =>
     '${formatDecimal(ratio * 100, digits: digits)} %';
 
+const _copFeatures = {'amount', 'spend_24h'};
+
+/// A rule condition's value for reading: `Sí`, `$ 2.000.000`, `0,6`, `a, b`.
+String formatConditionValue(String feature, Object value) => switch (value) {
+  bool v => v ? 'Sí' : 'No',
+  num v when _copFeatures.contains(feature) => formatCop(v.round()),
+  // `300,00` reads `300` and `0,60` reads `0,6`.
+  num v => formatDecimal(v.toDouble()).replaceFirst(RegExp(r',?0+$'), ''),
+  List<Object?> v => v.join(', '),
+  _ => value.toString(),
+};
+
 String formatDayMonth(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 
 String formatMonthYear(DateTime d) => '${_months[d.month - 1]} ${d.year}';
