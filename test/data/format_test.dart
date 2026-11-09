@@ -131,4 +131,27 @@ void main() {
       expect(dayAgo(const Duration(days: 70)), 'hace 2 meses');
     });
   });
+
+  group('formatConditionValue', () {
+    test('booleans read Sí and No', () {
+      expect(formatConditionValue('is_night', true), 'Sí');
+      expect(formatConditionValue('is_night', false), 'No');
+    });
+
+    test('COP features read as money', () {
+      expect(formatConditionValue('amount', 2000000), r'$ 2.000.000');
+      expect(formatConditionValue('spend_24h', 5000000), r'$ 5.000.000');
+    });
+
+    test('other numbers drop their trailing zeros', () {
+      expect(formatConditionValue('km_from_home', 300), '300');
+      expect(formatConditionValue('score', 0.6), '0,6');
+      expect(formatConditionValue('score', 0.85), '0,85');
+    });
+
+    test('lists and strings read as written', () {
+      expect(formatConditionValue('country', ['CO', 'PE']), 'CO, PE');
+      expect(formatConditionValue('channel', 'WEB'), 'WEB');
+    });
+  });
 }

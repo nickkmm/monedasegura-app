@@ -45,7 +45,6 @@ class _ConditionRowState extends State<ConditionRow> {
   static const double _height = 40;
   static const double _featureWidth = 220;
   static const double _opWidth = 90;
-  static const Set<String> _copFeatures = {'amount', 'spend_24h'};
 
   late final TextEditingController _value = TextEditingController(
     text: _rawValue(widget.condition.value),
@@ -70,16 +69,6 @@ class _ConditionRowState extends State<ConditionRow> {
   static String _rawValue(Object value) => switch (value) {
     num v when v == v.truncate() => v.toInt().toString(),
     num v => v.toString(),
-    List<Object?> v => v.join(', '),
-    _ => value.toString(),
-  };
-
-  /// The value for reading: `Sí`, `$ 2.000.000`, `0,6`, `a, b`.
-  static String _displayValue(String feature, Object value) => switch (value) {
-    bool v => v ? 'Sí' : 'No',
-    num v when _copFeatures.contains(feature) => formatCop(v.round()),
-    // `300,00` reads `300` and `0,60` reads `0,6`.
-    num v => formatDecimal(v.toDouble()).replaceFirst(RegExp(r',?0+$'), ''),
     List<Object?> v => v.join(', '),
     _ => value.toString(),
   };
@@ -151,7 +140,7 @@ class _ConditionRowState extends State<ConditionRow> {
           gap,
           Expanded(
             child: _box(
-              child: plain(_displayValue(c.feature, c.value), textStyle),
+              child: plain(formatConditionValue(c.feature, c.value), textStyle),
             ),
           ),
         ],
