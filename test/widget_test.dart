@@ -12,6 +12,7 @@ Future<void> _bigSurface(WidgetTester tester) async {
 Future<void> _signIn(WidgetTester tester, String email) async {
   await tester.enterText(find.byType(TextField).at(0), email);
   await tester.enterText(find.byType(TextField).at(1), 'secret');
+  await tester.pump();
   await tester.tap(find.text('Entrar'));
   await tester.pumpAndSettle();
 }
@@ -124,7 +125,12 @@ void main() {
     expect(find.byKey(const ValueKey('top-bar-bell-badge')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('top-bar-bell')));
     await tester.pumpAndSettle();
-    await tester.tap(find.textContaining('sin asignar'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.textContaining('sin asignar'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Cola de casos'), findsOneWidget);
