@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:monedasegura_app/data/labels.dart';
+import 'package:monedasegura_app/data/prototype_labels.dart';
 import 'package:monedasegura_app/data/models.dart';
 import 'package:monedasegura_app/widgets/badges.dart';
 import 'package:monedasegura_app/widgets/ms_button.dart';

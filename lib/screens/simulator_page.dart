@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../data/labels.dart';
+import '../data/prototype_labels.dart';
 import '../data/mock_data.dart';
 import '../data/models.dart';
 import '../theme/tokens.dart';

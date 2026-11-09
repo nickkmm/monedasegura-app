@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../data/labels.dart';
+import '../data/prototype_labels.dart';
 import '../theme/tokens.dart';
 
 /// Model fraud probability. Low < 0.6, Mid 0.6–0.9 (REVIEW), High ≥ 0.9 (BLOCK).
