@@ -285,6 +285,23 @@ void main() {
       expect(find.byType(MetricTile), findsNothing);
     });
 
+    testWidgets('places the threshold ticks at their positions', (
+      tester,
+    ) async {
+      // No active model, so "0,60" and "0,90" are only the ticks.
+      await _pumpPage(tester, models: [retired], activeModel: null);
+      final left = tester.getTopLeft(find.text('0')).dx;
+      final width = tester.getTopRight(find.text('1')).dx - left;
+      for (final (text, fraction) in [('0,60', 0.6), ('0,90', 0.9)]) {
+        final tick = find.text(text);
+        expect(
+          tester.getCenter(tick).dx,
+          closeTo(left + width * fraction, tester.getSize(tick).width / 2),
+          reason: text,
+        );
+      }
+    });
+
     testWidgets('shows a dash without an earlier retired version', (
       tester,
     ) async {

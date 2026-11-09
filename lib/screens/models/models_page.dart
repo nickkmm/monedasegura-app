@@ -296,13 +296,25 @@ class _ThresholdsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // "0" and "1" sit at the ends; each threshold sits under the
+          // segment boundary it names.
+          Stack(
             children: [
-              Text('0', style: tickStyle),
-              Text(reviewText, style: tickStyle),
-              Text(blockText, style: tickStyle),
-              Text('1', style: tickStyle),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('0', style: tickStyle),
+                  Text('1', style: tickStyle),
+                ],
+              ),
+              Align(
+                alignment: Alignment(review * 2 - 1, 0),
+                child: Text(reviewText, style: tickStyle),
+              ),
+              Align(
+                alignment: Alignment(block * 2 - 1, 0),
+                child: Text(blockText, style: tickStyle),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
