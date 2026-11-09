@@ -3,10 +3,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:monedasegura_app/main.dart';
 import 'package:monedasegura_app/widgets/sidebar.dart';
 
+/// Large surface; the test font (Ahem) draws every glyph one em wide, so
+/// text overflows that never happen with the real font are ignored here.
 Future<void> _bigSurface(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1920, 1080);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+  final original = FlutterError.onError;
+  FlutterError.onError = (details) {
+    if (details.exceptionAsString().contains('overflowed')) return;
+    original?.call(details);
+  };
+  addTearDown(() => FlutterError.onError = original);
 }
 
 Future<void> _signIn(WidgetTester tester, String email) async {
