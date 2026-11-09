@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monedasegura_app/data/models/models.dart';
+import 'package:monedasegura_app/theme/app_colors.dart';
 import 'package:monedasegura_app/theme/app_icons.dart';
 import 'package:monedasegura_app/widgets/widgets.dart';
 
@@ -26,6 +27,27 @@ void main() {
     expect(find.text('≥'), findsOneWidget);
     expect(find.text(r'$ 2.000.000'), findsOneWidget);
     expect(find.byIcon(AppIcons.close), findsNothing);
+    expect(find.byIcon(AppIcons.chevronDown), findsNothing);
+  });
+
+  testWidgets('editable dropdowns show a chevron', (tester) async {
+    await setDesktopView(tester);
+    await tester.pumpWidget(
+      harness(
+        _sized(
+          const ConditionRow(
+            condition: Condition('amount', ConditionOp.gte, 2000000),
+            editable: true,
+          ),
+        ),
+      ),
+    );
+    final chevrons = find.byIcon(AppIcons.chevronDown);
+    expect(chevrons, findsNWidgets(2));
+    for (final icon in tester.widgetList<Icon>(chevrons)) {
+      expect(icon.size, AppIcons.size);
+      expect(icon.color, AppColors.textTertiary);
+    }
   });
 
   testWidgets('read-only formats bools, numbers and lists', (tester) async {

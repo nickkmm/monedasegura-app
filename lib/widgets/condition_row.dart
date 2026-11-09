@@ -111,7 +111,11 @@ class _ConditionRowState extends State<ConditionRow> {
         value: value,
         isExpanded: true,
         isDense: true,
-        icon: const SizedBox.shrink(),
+        icon: const Icon(
+          AppIcons.chevronDown,
+          size: AppIcons.size,
+          color: AppColors.textTertiary,
+        ),
         style: style,
         onChanged: onChanged == null ? null : (v) => onChanged(v as T),
         items: [
@@ -207,10 +211,13 @@ class _ConditionRowState extends State<ConditionRow> {
               : SystemMouseCursors.click,
           child: GestureDetector(
             onTap: widget.onRemove,
-            child: Icon(
-              AppIcons.close,
-              size: AppIcons.size,
-              color: AppColors.textTertiary,
+            child: Opacity(
+              opacity: widget.onRemove == null ? 0.4 : 1,
+              child: const Icon(
+                AppIcons.close,
+                size: AppIcons.size,
+                color: AppColors.textTertiary,
+              ),
             ),
           ),
         ),
