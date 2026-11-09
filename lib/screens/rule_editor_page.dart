@@ -110,7 +110,7 @@ class _RuleEditorPageState extends State<RuleEditorPage> {
     text: widget.rule?.description ?? '',
   );
   late RuleAction _action = widget.rule?.latest.action ?? RuleAction.review;
-  late List<RuleCondition> _conditions = widget.rule == null
+  late final List<RuleCondition> _conditions = widget.rule == null
       ? [const RuleCondition(feature: 'amount', operator: '≥', value: '')]
       : List.of(widget.rule!.latest.conditions);
   String? _error;
