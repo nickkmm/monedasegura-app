@@ -105,9 +105,9 @@ class _RulesTable extends StatelessWidget {
     required this.onOpenRule,
   });
 
-  /// Below this card width "Actualizada" can't fit a date and an author, so
-  /// it shows only the date. The card is this wide in a 1418 px window.
-  static const double _fullLastChangeWidth = 1114;
+  /// Below this card width "Actualizada" shows only the date. The card is this
+  /// wide in a 1425 px window, where the widest date and author starts to fit.
+  static const double _fullLastChangeWidth = 1121;
 
   final List<RuleView> rows;
   final DateTime now;

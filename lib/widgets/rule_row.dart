@@ -28,7 +28,8 @@ class RuleRow extends StatefulWidget {
     this.compact = false,
   });
 
-  static const double compactDateWidth = 84;
+  /// Fits every date up to "hace 99 meses".
+  static const double compactDateWidth = 88;
 
   final RuleView rule;
   final DateTime now;

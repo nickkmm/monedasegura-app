@@ -317,7 +317,7 @@ void main() {
       expect(tester.takeException(), isNull);
     }
 
-    for (final width in [1000.0, 1280.0, 1366.0, 1417.0]) {
+    for (final width in [1280.0, 1366.0, 1424.0]) {
       testWidgets('at $width wide shows only the date, in full', (
         tester,
       ) async {
@@ -347,7 +347,7 @@ void main() {
       });
     }
 
-    for (final width in [1418.0, 1440.0]) {
+    for (final width in [1425.0, 1440.0]) {
       testWidgets('at $width wide keeps the date and the author, in full', (
         tester,
       ) async {
@@ -367,6 +367,64 @@ void main() {
         }
       });
     }
+
+    // The widest date up to 99 months, with the widest seed author.
+    Future<void> pumpWidest(WidgetTester tester, double cardWidth) async {
+      final fake = _fakeRule('FAKE_WIDEST');
+      await setDesktopView(tester);
+      await tester.pumpWidget(
+        harness(
+          SizedBox(
+            width: cardWidth,
+            child: RulesPage(
+              tabLabels: const ['Uno', 'Dos'],
+              tab: 0,
+              rows: [
+                RuleView(
+                  rule: fake.rule,
+                  versions: [
+                    fake.latest.copyWith(
+                      createdBy: const UserRef(
+                        id: 'u',
+                        fullName: 'Laura Cárdenas',
+                      ),
+                      createdAt: kTestNow.subtract(
+                        const Duration(days: 44 * 30),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              now: kTestNow,
+              canCreate: true,
+              onTabSelected: (_) {},
+              onNewRule: () {},
+              onOpenRule: (_) {},
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    }
+
+    testWidgets('just below the switch point "hace 44 meses" fits', (
+      tester,
+    ) async {
+      await pumpWidest(tester, 1120);
+      final date = find.text('hace 44 meses');
+      expect(date, findsOneWidget);
+      expect(truncated(tester, date), isFalse);
+      expect(find.text('hace 44 meses · Laura Cárdenas'), findsNothing);
+    });
+
+    testWidgets('at the switch point "hace 44 meses · Laura Cárdenas" fits', (
+      tester,
+    ) async {
+      await pumpWidest(tester, 1121);
+      final value = find.text('hace 44 meses · Laura Cárdenas');
+      expect(value, findsOneWidget);
+      expect(truncated(tester, value), isFalse);
+    });
   });
 
   group('navigation', () {
