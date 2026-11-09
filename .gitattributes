@@ -1,0 +1,5 @@
+# Keep LF in every checkout, so the factory scripts and shell tools run under WSL
+# and Linux even when the repo is cloned with Windows Git (core.autocrlf=true).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
