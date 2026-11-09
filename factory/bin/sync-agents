@@ -45,7 +45,7 @@ def die(msg):
 
 
 def parse(path):
-    m = re.match(r"^---\n(.*?)\n---\n(.*)$", path.read_text(), re.S)
+    m = re.match(r"^---\n(.*?)\n---\n(.*)$", path.read_text(encoding="utf-8"), re.S)
     if not m:
         die(f"{path} has no frontmatter")
     meta = {}
@@ -95,11 +95,11 @@ def main(argv):
         out = DEST / src.name
         text = render(src)
         if check:
-            if not out.exists() or out.read_text() != text:
+            if not out.exists() or out.read_text(encoding="utf-8") != text:
                 stale.append(str(out.relative_to(REPO)))
         else:
             DEST.mkdir(parents=True, exist_ok=True)
-            out.write_text(text)
+            out.write_text(text, encoding="utf-8")
     extra = [p for p in DEST.glob("*.md") if not (SRC / p.name).exists()] if DEST.exists() else []
     if check:
         stale += [f"{p.relative_to(REPO)} (no source)" for p in extra]
