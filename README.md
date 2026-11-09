@@ -2,7 +2,7 @@
 
 Risk-analyst console for MonedaSegura, with an admin simulator. User-facing text is in Spanish.
 
-**Stack:** Flutter 3.47 · web + Android · **Owners:** Juan José, Santiago · **Status:** skeleton
+**Stack:** Flutter 3.47 · web + Android · **Owners:** Juan José, Santiago · **Status:** simulated login and console shell with stub screens
 
 Part of MonedaSegura (Universidad Icesi + Lovelytics). The shared specification — context, MVP plan, data model, architecture and API contracts — lives in [`monedasegura-infra`](https://github.com/nickkmm/monedasegura-infra), cloned next to this repo inside a `SecureMoney/` workspace folder. Contract: `../monedasegura-infra/docs/api/decision-api.yaml`.
 
@@ -16,6 +16,19 @@ docker build -t monedasegura/app:dev .   # served by nginx on :80
 ```
 
 The whole stack (Postgres, Redis, Kafka and the three services) runs from `../monedasegura-infra` with `docker compose --profile apps up -d --build`.
+
+## Demo accounts
+
+The login is simulated with the mock users. They share the password `MonedaSegura2026` (`MockSeed.demoPassword`).
+
+| User | Email | Role |
+|---|---|---|
+| Valentina Ríos | `valentina.rios@monedasegura.co` | `ADMIN` |
+| Laura Méndez | `laura.mendez@monedasegura.co` | `RISK_LEAD` |
+| Diego Salazar | `diego.salazar@monedasegura.co` | `RISK_LEAD` |
+| Camilo Torres | `camilo.torres@monedasegura.co` | `ANALYST` |
+| Laura Cárdenas | `laura.cardenas@monedasegura.co` | `DATA_SCIENTIST` |
+| Mateo Rojas | `mateo.rojas@monedasegura.co` | `AUDITOR` |
 
 ## Contributing
 

@@ -5,7 +5,7 @@ Instructions for any coding agent (Claude Code, Antigravity, others) working in 
 ## What this repo is
 The **Flutter app** of MonedaSegura (Flutter 3.47, web + Android): the console used by risk analysts — case queue, case detail and labeling, rules (with shadow, backtest and approval), models, dashboard — plus the **simulator** (admin only) that generates synthetic transactions. There is no customer-facing app.
 
-Owners: Juan José, Santiago. Status: **skeleton** — a placeholder sign-in screen; the rest starts once the data model (ERD) and the prototype are approved.
+Owners: Juan José, Santiago. Status: **simulated login and console shell with stub screens**; the screen tasks fill in the stubs.
 
 ## Read first (shared context)
 The shared specification lives in the sibling repo `../monedasegura-infra/docs/`. Read it; never copy it here.
@@ -92,6 +92,7 @@ Repo-specific skills go in `.agents/skills/<name>/SKILL.md` (`.claude/skills` is
 - **Structure.** Each reusable component is one widget in a shared widgets folder, built once and reused. The state lives in the host Screen; Pages only show data and capture interaction, reporting up through callbacks, and never keep app data of their own. Mock data are in-memory models and lists consistent with `../monedasegura-infra/docs/model.md`; creating, editing or deleting updates what the screen shows.
 - **Data layer.** `lib/data/models/` holds the domain models, `lib/data/labels.dart` the Spanish labels, `lib/data/format.dart` the formatters and `lib/data/mock/mock_seed.dart` the mock data; screens reuse them rather than re-translating or re-formatting. `lib/data/app_store.dart` holds the in-memory state and domain operations; domain failures throw `DomainError`; widgets reach the store through `AppScope.of` (rebuilds) or `AppScope.read` (callbacks).
 - **Theme.** Design tokens live in `lib/theme/`: `AppColors`, `AppSpacing`, `AppRadius`, `AppShadows`, `AppTextStyles`, `AppIcons` and `buildAppTheme()`. Widgets never write a hex color, a font size or an icon outside it. Widget tests pump through `harness()` and `setDesktopView()` from `test/helpers/harness.dart`.
-- **Shared widgets.** Shared components live in `lib/widgets/`, one public widget per file, exported from `lib/widgets/widgets.dart`. They are pure presentation: parameters in, callbacks out (a `null` callback means disabled or read-only), never `AppScope` or `AppStore`.
+- **Shared widgets.** Shared components live in `lib/widgets/`, one public widget per file, exported from `lib/widgets/widgets.dart`. They are pure presentation: parameters in, callbacks out (a `null` callback means disabled or read-only), never `AppScope` or `AppStore`. The one exception is `AppShell`, which reads `AppScope` for the session only.
+- **Routing.** `lib/app/routes.dart` holds the routes and guards, `lib/app/nav_destination.dart` the sidebar destinations. New screen tests use `pumpApp` from `test/helpers/pump_app.dart`.
 - **Current delivery.** `docs/deliveries/flutter-prototype.md`.
 <!-- factory:end -->
