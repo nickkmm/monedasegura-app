@@ -535,19 +535,16 @@ class MockSeed {
         txCount1h: 4,
         latencyMs: 163,
       ),
-      // Known exception to model.md §5: no active rule can produce this REVIEW,
-      // because rules on `score` don't match when degraded and the amount is
-      // under every other active rule's threshold. Its hits stay truthful.
       const _CaseRow(
         id: '09f35b67-a5c2-4d19-8c3e-5b6c7d8e9fa4',
         customer: 'Daniela C.',
-        amount: 2180000,
+        amount: 3180000,
         type: TransactionType.DEBIT,
         category: 'grocery_pos',
         verdict: Verdict.REVIEW,
         age: Duration(minutes: 17),
-        amountVsAvg: 3.4,
-        isNewDevice: false,
+        amountVsAvg: 4.9,
+        isNewDevice: true,
         kmFromHome: 6,
         txCount1h: 2,
         latencyMs: 188,
@@ -887,7 +884,7 @@ class MockSeed {
             action: RuleAction.REVIEW,
             status: RuleStatus.PENDING_APPROVAL,
             createdBy: laura,
-            createdAt: daysAgo(3),
+            createdAt: daysAgo(6),
             shadowStats: ShadowStats(
               since: daysAgo(5),
               evaluated: 4200,
