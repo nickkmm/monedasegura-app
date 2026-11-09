@@ -30,7 +30,7 @@ def die(msg):
 
 
 def git(worktree, *args):
-    res = subprocess.run(["git", *args], cwd=worktree, capture_output=True, text=True)
+    res = subprocess.run(["git", *args], cwd=worktree, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if res.returncode != 0:
         die(f"`git {' '.join(args)}` failed: {(res.stderr or res.stdout).strip()}")
     return res.stdout
@@ -42,7 +42,7 @@ def main(argv):
     job_dir = FACTORY / "jobs" / argv[0]
     if not (job_dir / "job.json").exists():
         die(f"no job {argv[0]}")
-    job = json.loads((job_dir / "job.json").read_text())
+    job = json.loads((job_dir / "job.json").read_text(encoding="utf-8"))
     worktree = Path(job["worktree"])
     if not worktree.exists():
         die(f"{job['id']} has no worktree")

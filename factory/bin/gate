@@ -21,7 +21,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 FACTORY = REPO / "factory"
-CONFIG = json.loads((FACTORY / "config.json").read_text())
+CONFIG = json.loads((FACTORY / "config.json").read_text(encoding="utf-8"))
 CHECKS = FACTORY / "checks.sh"
 TAIL = 80
 
@@ -32,7 +32,7 @@ def die(msg):
 
 
 def git(worktree, *args):
-    res = subprocess.run(["git", *args], cwd=worktree, capture_output=True, text=True)
+    res = subprocess.run(["git", *args], cwd=worktree, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if res.returncode != 0:
         die(f"`git {' '.join(args)}` failed: {res.stderr.strip()}")
     return res.stdout
@@ -54,12 +54,12 @@ def protected_changes(worktree):
 
 def run_checks(worktree):
     start = time.monotonic()
-    res = subprocess.run(["bash", str(CHECKS)], cwd=worktree, capture_output=True, text=True)
+    res = subprocess.run(["bash", str(CHECKS)], cwd=worktree, capture_output=True, text=True, encoding="utf-8", errors="replace")
     return res.returncode, res.stdout + res.stderr, int(time.monotonic() - start)
 
 
 def gate(job_id, merge):
-    job = json.loads((FACTORY / "jobs" / job_id / "job.json").read_text())
+    job = json.loads((FACTORY / "jobs" / job_id / "job.json").read_text(encoding="utf-8"))
     worktree = job["worktree"]
     if job["round"] < 1:
         die(f"{job_id} hasn't started a build round")
@@ -69,7 +69,7 @@ def gate(job_id, merge):
     code, log, seconds = run_checks(worktree)
     verdict = "PASS" if code == 0 and not protected else "FAIL"
     name = "merge-checks" if merge else "checks"
-    (round_dir / f"{name}.log").write_text(log)
+    (round_dir / f"{name}.log").write_text(log, encoding="utf-8")
     tail = "\n".join(log.rstrip().splitlines()[-TAIL:])
     summary = [
         f"checks.sh {'passed' if code == 0 else f'failed with exit {code}'} in {seconds}s",
@@ -81,7 +81,7 @@ def gate(job_id, merge):
         "## Summary\n" + "\n".join(f"- {s}" for s in summary) + "\n\n"
         "## Protected paths\n"
         + ("\n".join(f"- {p}" for p in protected) if protected else "None changed.")
-        + f"\n\n## checks.sh\nExit {code} in {seconds}s. Last {TAIL} lines of {name}.log:\n\n```\n{tail}\n```\n"
+        + f"\n\n## checks.sh\nExit {code} in {seconds}s. Last {TAIL} lines of {name}.log:\n\n```\n{tail}\n```\n", encoding="utf-8"
     )
     print(f"GATE: {verdict} ({job_id} round {job['round']}, checks.sh exit {code} in {seconds}s"
           + (f", protected paths changed: {', '.join(protected)}" if protected else "") + ")")
@@ -92,11 +92,11 @@ def hook():
     event = json.load(sys.stdin)
     if event.get("stop_hook_active"):
         sys.exit(0)  # one nudge per stop; the gate decides
-    with open(Path(event["agent_transcript_path"]).expanduser()) as f:
+    with open(Path(event["agent_transcript_path"]).expanduser(), encoding="utf-8") as f:
         content = json.loads(f.readline())["message"]["content"]
     prompt = content if isinstance(content, str) else " ".join(b.get("text", "") for b in content)
     job_id = prompt.split("Job: ", 1)[1].split(".", 1)[0]
-    job = json.loads((FACTORY / "jobs" / job_id / "job.json").read_text())
+    job = json.loads((FACTORY / "jobs" / job_id / "job.json").read_text(encoding="utf-8"))
     code, log, _ = run_checks(job["worktree"])
     if code != 0:
         tail = "\n".join(log.rstrip().splitlines()[-40:])

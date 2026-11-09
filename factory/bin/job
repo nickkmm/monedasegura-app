@@ -33,7 +33,7 @@ REPO = Path(__file__).resolve().parents[2]
 FACTORY = REPO / "factory"
 JOBS = FACTORY / "jobs"
 BIN = FACTORY / "bin"
-CONFIG = json.loads((FACTORY / "config.json").read_text())
+CONFIG = json.loads((FACTORY / "config.json").read_text(encoding="utf-8"))
 LABELS = CONFIG["labels"]
 BASE = CONFIG["base_branch"]
 MARKER = "<!-- factory -->"
@@ -74,7 +74,7 @@ def now():
 
 
 def run(cmd, cwd=REPO, check=True):
-    res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if check and res.returncode != 0:
         raise Refused(f"`{' '.join(cmd)}` failed: {(res.stderr or res.stdout).strip()}")
     return res
@@ -117,13 +117,13 @@ def load(job_id):
     if job_id not in _locks:
         _locks[job_id] = open(job_dir(job_id) / ".lock", "w")
         fcntl.flock(_locks[job_id], fcntl.LOCK_EX)
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def save(job):
     path = job_dir(job["id"]) / "job.json"
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(job, indent=2) + "\n")
+    tmp.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)
 
 
@@ -154,13 +154,13 @@ def resolve(arg):
 
 
 def first_line(path):
-    return path.read_text().split("\n", 1)[0].strip() if path.exists() else None
+    return path.read_text(encoding="utf-8").split("\n", 1)[0].strip() if path.exists() else None
 
 
 def header(path):
     """KEY: value lines at the top of an agent's file, up to the first blank line."""
     fields = {}
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             break
         key, _, value = line.partition(":")
@@ -170,7 +170,7 @@ def header(path):
 
 def section(path, heading):
     """Body of a `## heading` section, or None."""
-    m = re.search(rf"^## {re.escape(heading)}\n(.*?)(?=^## |\Z)", path.read_text(), re.M | re.S)
+    m = re.search(rf"^## {re.escape(heading)}\n(.*?)(?=^## |\Z)", path.read_text(encoding="utf-8"), re.M | re.S)
     return m.group(1).strip() if m else None
 
 
@@ -218,7 +218,7 @@ def write_issue_md(job):
             who = "factory" if c["body"].startswith(MARKER) else f"@{c['author']['login']}"
             body = c["body"].removeprefix(MARKER)
             lines += ["", f"### {who}, {c['createdAt']}", "", quote(body)]
-    (job_dir(job["id"]) / "issue.md").write_text("\n".join(lines) + "\n")
+    (job_dir(job["id"]) / "issue.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return issue
 
 
@@ -274,7 +274,7 @@ def cost_usd(job):
     prices = CONFIG["prices_usd_per_mtok"]
     total = 0.0
     for path in transcripts_dir().glob("*/subagents/agent-*.jsonl"):
-        with path.open() as f:
+        with path.open(encoding="utf-8") as f:
             first = f.readline()
             if not first or needle not in prompt_text(first):
                 continue
@@ -342,7 +342,7 @@ def require(cond, msg):
 
 def escalate(job, why):
     """Write decision.md for an escalation the approver didn't make."""
-    (job_dir(job["id"]) / "decision.md").write_text(f"ESCALATE\n\n## Why\n{why}\n")
+    (job_dir(job["id"]) / "decision.md").write_text(f"ESCALATE\n\n## Why\n{why}\n", encoding="utf-8")
 
 
 def git(job, *args, check=True):
@@ -374,7 +374,7 @@ def advance(job, stage):
             f"{job['id']}: {old} → {stage} is not a legal transition")
     d = job_dir(job["id"])
     decision = header(d / "intake.md").get("DECISION") if (d / "intake.md").exists() else None
-    intake_body = lambda: "\n".join((d / "intake.md").read_text().split("\n\n", 1)[1:]).strip()
+    intake_body = lambda: "\n".join((d / "intake.md").read_text(encoding="utf-8").split("\n\n", 1)[1:]).strip()
 
     if stage == "merged":
         require(job["pr"] and pr_state(job) == "MERGED", "the PR isn't merged")
@@ -383,7 +383,7 @@ def advance(job, stage):
 
     elif stage == "rejected" and old in WAITING:
         require((d / "rejection.md").exists(), "use `job reject` to reject a waiting job")
-        reason = (d / "rejection.md").read_text().split("\n", 1)[1].strip()
+        reason = (d / "rejection.md").read_text(encoding="utf-8").split("\n", 1)[1].strip()
         comment("issue", job["issue"], f"### Factory: rejected\n\n{reason}")
         waiting = LABELS["needs_info"] if old == "needs-info" else LABELS["needs_human"]
         label("issue", job["issue"], remove=f"{LABELS['queue']},{waiting}")
@@ -492,7 +492,7 @@ def advance(job, stage):
         label("issue", job["issue"], remove=LABELS["needs_human"])
 
     if stage == "needs-human":
-        body = f"### Factory: needs a human\n\n{(d / 'decision.md').read_text().split(chr(10), 1)[1].strip()}"
+        body = f"### Factory: needs a human\n\n{(d / 'decision.md').read_text(encoding='utf-8').split(chr(10), 1)[1].strip()}"
         if job["pr"]:
             if gh_json("pr", "view", str(job["pr"]), "--json", "isDraft")["isDraft"]:
                 gh("pr", "ready", str(job["pr"]))
@@ -622,7 +622,7 @@ def cmd_merge(job):
     if merged.returncode != 0:
         git(job, "merge", "--abort", check=False)
         return fail(f"The branch conflicts with {BASE}:\n\n```\n{merged.stdout.strip()}\n```")
-    gate = subprocess.run([str(BIN / "gate"), job["id"], "--merge"], capture_output=True, text=True)
+    gate = subprocess.run([str(BIN / "gate"), job["id"], "--merge"], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if gate.returncode != 0:
         return fail(f"The gate failed after syncing with {BASE}. "
                     f"See round-{job['round']}/merge-checks.md.\n\n{gate.stdout.strip()}")
@@ -646,7 +646,7 @@ def cmd_feedback(job, text):
         die("no feedback on stdin")
     d = job_dir(job["id"])
     k = len(list(d.glob("feedback-*.md"))) + 1
-    (d / f"feedback-{k}.md").write_text(f"# Feedback {k}\n\nFrom @{operator()} after the job escalated.\n\n{text.strip()}\n")
+    (d / f"feedback-{k}.md").write_text(f"# Feedback {k}\n\nFrom @{operator()} after the job escalated.\n\n{text.strip()}\n", encoding="utf-8")
     save(advance(sync(job), "build"))
     print(f"{job['id']}: feedback-{k}.md, round {job['round']}")
 
@@ -656,7 +656,7 @@ def cmd_reject(job, text):
         die(f"{job['id']} is in {job['stage']}, not needs-info or needs-human")
     if not text.strip():
         die("no reason on stdin")
-    (job_dir(job["id"]) / "rejection.md").write_text(f"REJECTED\n\nBy @{operator()} while the job was {job['stage']}.\n\n{text.strip()}\n")
+    (job_dir(job["id"]) / "rejection.md").write_text(f"REJECTED\n\nBy @{operator()} while the job was {job['stage']}.\n\n{text.strip()}\n", encoding="utf-8")
     save(advance(sync(job), "rejected"))
     print(f"{job['id']}: rejected")
 

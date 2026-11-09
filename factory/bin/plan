@@ -37,7 +37,7 @@ import sys
 from pathlib import Path
 
 FACTORY = Path(__file__).resolve().parents[1]
-CONFIG = json.loads((FACTORY / "config.json").read_text())
+CONFIG = json.loads((FACTORY / "config.json").read_text(encoding="utf-8"))
 QUEUE = CONFIG["labels"]["queue"]
 GH = os.environ.get("FACTORY_GH", "gh")  # tests point this at a fake gh
 DEPENDS = re.compile(r"^Depends on ([\w.-]+/[\w.-]+)?#(\d+)\s*$", re.M)
@@ -49,7 +49,7 @@ def die(msg):
 
 
 def gh(*args):
-    res = subprocess.run([GH, *args], capture_output=True, text=True)
+    res = subprocess.run([GH, *args], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if res.returncode != 0:
         die(f"`gh {' '.join(args)}` failed: {(res.stderr or res.stdout).strip()}")
     return res.stdout
@@ -91,7 +91,7 @@ def ordered(tasks):
 
 def cmd_create(plan_dir):
     plan_dir = Path(plan_dir)
-    spec = json.loads((plan_dir / "tasks.json").read_text())
+    spec = json.loads((plan_dir / "tasks.json").read_text(encoding="utf-8"))
     for t in spec["tasks"]:
         missing = [k for k in ("key", "title", "body", "assignee") if not t.get(k)]
         if missing:
@@ -99,10 +99,10 @@ def cmd_create(plan_dir):
     tasks = ordered(spec["tasks"])
     home = this_repo()
     created_path = plan_dir / "created.json"
-    created = json.loads(created_path.read_text()) if created_path.exists() else {}
+    created = json.loads(created_path.read_text(encoding="utf-8")) if created_path.exists() else {}
 
     def save():
-        created_path.write_text(json.dumps(created, indent=2) + "\n")
+        created_path.write_text(json.dumps(created, indent=2) + "\n", encoding="utf-8")
 
     if "plan" not in created:
         url = gh("issue", "create", "--title", f"Plan: {spec['title']}", "--body",
