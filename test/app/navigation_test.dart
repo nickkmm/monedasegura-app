@@ -48,8 +48,12 @@ Color? _navBackground(WidgetTester tester, String label) {
   return (container.decoration! as BoxDecoration).color;
 }
 
-Finder get _horizontalScrollView => find.byWidgetPredicate(
-  (w) => w is SingleChildScrollView && w.scrollDirection == Axis.horizontal,
+// The shell's own scroll view, the one around the sidebar.
+Finder get _horizontalScrollView => find.ancestor(
+  of: find.byType(AppSidebar),
+  matching: find.byWidgetPredicate(
+    (w) => w is SingleChildScrollView && w.scrollDirection == Axis.horizontal,
+  ),
 );
 
 void main() {
