@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monedasegura_app/app/nav_destination.dart';
 import 'package:monedasegura_app/app/routes.dart';
@@ -10,6 +9,7 @@ import 'package:monedasegura_app/screens/rules/rule_editor_screen.dart';
 import 'package:monedasegura_app/theme/app_colors.dart';
 import 'package:monedasegura_app/widgets/widgets.dart';
 
+import '../helpers/harness.dart';
 import '../helpers/pump_app.dart';
 
 const _valentina = 'valentina.rios@monedasegura.co';
@@ -49,21 +49,18 @@ Color? _navBackground(WidgetTester tester, String label) {
   return (container.decoration! as BoxDecoration).color;
 }
 
-Finder get _horizontalScrollView => find.byWidgetPredicate(
-  (w) => w is SingleChildScrollView && w.scrollDirection == Axis.horizontal,
+// The shell's own scroll view, the one around the sidebar.
+Finder get _horizontalScrollView => find.ancestor(
+  of: find.byType(AppSidebar),
+  matching: find.byWidgetPredicate(
+    (w) => w is SingleChildScrollView && w.scrollDirection == Axis.horizontal,
+  ),
 );
 
 void main() {
-  // The default test font draws every glyph as a square, which makes the
-  // "Pendiente" badge on the rules screen wider than its 130 px cell; measure
-  // with Inter.
-  setUpAll(() async {
-    final loader = FontLoader('Inter');
-    for (final weight in ['Regular', 'Medium', 'SemiBold']) {
-      loader.addFont(rootBundle.load('assets/fonts/Inter-$weight.ttf'));
-    }
-    await loader.load();
-  });
+  // Opening the models and rules screens lays out their tables, feature bars
+  // and status badges.
+  setUpAll(loadInterFont);
 
   testWidgets('the sidebar shows only what the permissions allow', (
     tester,
