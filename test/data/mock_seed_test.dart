@@ -3,7 +3,6 @@ import 'package:monedasegura_app/data/format.dart';
 import 'package:monedasegura_app/data/mock/mock_seed.dart';
 import 'package:monedasegura_app/data/models/models.dart';
 
-const _exceptionCase = '#09F35B';
 const _detailCase = '#B204E7';
 
 /// An independent evaluation of a version's conditions (`model.md` §5).
@@ -276,21 +275,40 @@ void main() {
   });
 
   group('verdicts', () {
-    test('every verdict but #09F35B is the most severe matched hit', () {
+    test('every verdict is the most severe matched hit', () {
       for (final view in seed.cases) {
-        if (view.shortId == _exceptionCase) continue;
         expect(_mostSevere(view.decision), view.verdict, reason: view.shortId);
       }
     });
 
-    test('#09F35B is degraded, with no matched non-shadow hit', () {
-      final view = caseOf(_exceptionCase);
-      expect(view.amount, 2180000);
+    test('#09F35B is degraded, with REVIEW from HIGH_AMOUNT_NEW_DEVICE', () {
+      final view = caseOf('#09F35B');
+      expect(view.amount, 3180000);
+      expect(view.verdict, Verdict.REVIEW);
       expect(view.score, isNull);
       expect(view.degraded, isTrue);
       expect(view.decision.modelVersion, isNull);
-      expect(view.verdict, Verdict.REVIEW);
-      expect(_mostSevere(view.decision), Verdict.APPROVE);
+      expect(view.decision.features['amount'], 3180000);
+      expect(view.decision.features['amount_vs_avg_30d'], 4.9);
+      expect(view.decision.features['is_new_device'], true);
+      final hits = view.decision.ruleHits;
+      final highAmount = hits.singleWhere(
+        (h) => h.ruleCode == 'HIGH_AMOUNT_NEW_DEVICE' && h.version == 3,
+      );
+      expect(highAmount.matched, isTrue);
+      expect(highAmount.shadow, isFalse);
+      for (final (code, version) in [
+        ('SCORE_BLOCK', 2),
+        ('SCORE_REVIEW', 4),
+        ('VELOCITY_1H', 1),
+        ('NIGHT_TRANSFER', 1),
+        ('FAR_FROM_HOME', 1),
+      ]) {
+        final hit = hits.singleWhere(
+          (h) => h.ruleCode == code && h.version == version,
+        );
+        expect(hit.matched, isFalse, reason: code);
+      }
     });
 
     test('every hit is the truthful evaluation of its version', () {
@@ -380,7 +398,7 @@ void main() {
         'HIGH_AMOUNT_NEW_DEVICE': ('Diego Salazar', 'hace 12 d'),
         'VELOCITY_1H': ('Diego Salazar', 'hace 20 d'),
         'FAR_FROM_HOME': ('Laura Méndez', 'ayer'),
-        'NIGHT_TRANSFER': ('Laura Méndez', 'hace 3 d'),
+        'NIGHT_TRANSFER': ('Laura Méndez', 'hace 6 d'),
         'ATO_PASSWORD_RESET': ('Diego Salazar', 'hoy'),
         'VELOCITY_5M': ('Laura Méndez', 'hace 2 meses'),
       };
@@ -492,7 +510,7 @@ void main() {
       final v2 = ruleOf('NIGHT_TRANSFER').latest;
       expect(v2.status, RuleStatus.PENDING_APPROVAL);
       expect(formatDecimal(v2.backtest!.candidate.precision), '0,52');
-      expect(formatDayMonth(v2.createdAt), '22 oct');
+      expect(formatDayMonth(v2.createdAt), '19 oct');
       expect(formatHm(v2.submittedAt!), '08:10');
       expect(formatDayAgo(v2.shadowStats!.since, now), 'hace 5 d');
       expect(v2.shadowStats!.evaluated, 4200);
@@ -507,6 +525,13 @@ void main() {
       expect(v2.backtest!.candidate.trueNegatives, 1819);
       expect(v2.backtest!.systemRecallBefore, 0.74);
       expect(v2.backtest!.systemRecallAfter, 0.77);
+    });
+
+    test('NIGHT_TRANSFER v2 is created, then shadowed, then submitted', () {
+      final v2 = ruleOf('NIGHT_TRANSFER').latest;
+      final since = v2.shadowStats!.since;
+      expect(v2.createdAt.isBefore(since), isTrue);
+      expect(since.isBefore(v2.submittedAt!), isTrue);
     });
 
     test('FAR_FROM_HOME v1 has its shadow stats', () {
