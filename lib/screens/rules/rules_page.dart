@@ -105,12 +105,15 @@ class _RulesTable extends StatelessWidget {
     required this.onOpenRule,
   });
 
+  /// Below this card width "Actualizada" shows only the date. The card is this
+  /// wide in a 1425 px window, where the widest date and author starts to fit.
+  static const double _fullLastChangeWidth = 1121;
+
   final List<RuleView> rows;
   final DateTime now;
   final ValueChanged<RuleView> onOpenRule;
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _table({required bool compact}) {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -122,28 +125,31 @@ class _RulesTable extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const TableHeaderRow(
+          TableHeaderRow(
             cells: [
-              TableHeaderCell(label: 'Regla', width: 300),
-              TableHeaderCell(label: 'Versión', width: 56),
-              TableHeaderCell(label: 'Acción', width: 96),
-              TableHeaderCell(label: 'Estado', width: 130),
-              TableHeaderCell(
+              compact
+                  ? const TableHeaderCell(label: 'Regla', flex: true)
+                  : const TableHeaderCell(label: 'Regla', width: 300),
+              const TableHeaderCell(label: 'Versión', width: 56),
+              const TableHeaderCell(label: 'Acción', width: 96),
+              const TableHeaderCell(label: 'Estado', width: 130),
+              const TableHeaderCell(
                 label: 'Coinc. 7 d',
                 width: 90,
                 align: TextAlign.right,
               ),
-              TableHeaderCell(
+              const TableHeaderCell(
                 label: 'Precisión',
                 width: 80,
                 align: TextAlign.right,
               ),
               TableHeaderCell(
                 label: 'Actualizada',
-                flex: true,
+                width: compact ? RuleRow.compactDateWidth : null,
+                flex: !compact,
                 align: TextAlign.right,
               ),
-              TableHeaderCell(width: AppIcons.size),
+              const TableHeaderCell(width: AppIcons.size),
             ],
           ),
           if (rows.isEmpty)
@@ -159,9 +165,22 @@ class _RulesTable extends StatelessWidget {
             )
           else
             for (final rule in rows)
-              RuleRow(rule: rule, now: now, onTap: () => onOpenRule(rule)),
+              RuleRow(
+                rule: rule,
+                now: now,
+                compact: compact,
+                onTap: () => onOpenRule(rule),
+              ),
         ],
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          _table(compact: constraints.maxWidth < _fullLastChangeWidth),
     );
   }
 }

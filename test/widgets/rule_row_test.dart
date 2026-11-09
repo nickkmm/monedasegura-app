@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monedasegura_app/data/mock/mock_seed.dart';
@@ -43,6 +44,26 @@ void main() {
     ]) {
       expect(find.text(text), findsOneWidget, reason: text);
     }
+  });
+
+  testWidgets('compact shows only the date, untruncated, in its column', (
+    tester,
+  ) async {
+    await setDesktopView(tester);
+    await tester.pumpWidget(
+      harness(
+        SizedBox(
+          width: 976,
+          child: RuleRow(rule: _rule('VELOCITY_5M'), now: _now, compact: true),
+        ),
+      ),
+    );
+    final date = find.text('hace 2 meses');
+    expect(date, findsOneWidget);
+    expect(find.text('hace 2 meses · Laura Méndez'), findsNothing);
+    expect(tester.getSize(date).width, RuleRow.compactDateWidth);
+    expect(tester.renderObject<RenderParagraph>(date).didExceedMaxLines, false);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a draft shows dashes for hits and precision', (tester) async {
