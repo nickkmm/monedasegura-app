@@ -11,6 +11,7 @@ export 'condition_row.dart';
 export 'detail_field.dart';
 export 'empty_state.dart';
 export 'feature_bar.dart';
+export 'filter_pill.dart';
 export 'kpi_card.dart';
 export 'legend_item.dart';
 export 'metric_tile.dart';
