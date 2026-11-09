@@ -13,6 +13,8 @@ abstract final class AppIcons {
   static const IconData play = LucideIcons.play;
   static const IconData search = LucideIcons.search;
   static const IconData chevronRight = LucideIcons.chevronRight;
+  // Dropdown indicator: not a gallery icon, so it is not in [all].
+  static const IconData chevronDown = LucideIcons.chevronDown;
   static const IconData check = LucideIcons.check;
   static const IconData close = LucideIcons.x;
   static const IconData back = LucideIcons.arrowLeft;
