@@ -46,4 +46,38 @@ void main() {
     expect(_labelColor(tester, '7 días'), AppColors.textPrimary);
     expect(_labelColor(tester, '30 días'), AppColors.textSecondary);
   });
+
+  testWidgets('shows a click cursor only when tappable', (tester) async {
+    await setDesktopView(tester);
+    MouseCursor cursor() => tester
+        .widget<MouseRegion>(
+          find
+              .descendant(
+                of: find.byType(AppSegmentedControl<int>),
+                matching: find.byType(MouseRegion),
+              )
+              .first,
+        )
+        .cursor;
+    await tester.pumpWidget(
+      harness(
+        AppSegmentedControl<int>(
+          options: _options,
+          selected: 7,
+          onChanged: (_) {},
+        ),
+      ),
+    );
+    expect(cursor(), SystemMouseCursors.click);
+    await tester.pumpWidget(
+      harness(
+        const AppSegmentedControl<int>(
+          options: _options,
+          selected: 7,
+          onChanged: null,
+        ),
+      ),
+    );
+    expect(cursor(), SystemMouseCursors.basic);
+  });
 }

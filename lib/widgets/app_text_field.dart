@@ -12,7 +12,8 @@ import '../theme/app_text_styles.dart';
 /// [keyboardType] and [readOnly] pass through to the inner [TextField].
 /// [onChanged], [onSubmitted] and [onTap] report typing, submit and tap;
 /// `null` means the event is not reported. [errorText] turns the border red
-/// and shows the message below the field.
+/// and shows the message below the field; while it is set, the error border
+/// replaces the focus border and ring.
 class AppTextField extends StatefulWidget {
   const AppTextField({
     super.key,

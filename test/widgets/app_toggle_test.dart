@@ -57,4 +57,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(_knobCenterX(tester), 10);
   });
+
+  testWidgets('shows a click cursor only when tappable', (tester) async {
+    await setDesktopView(tester);
+    MouseCursor cursor() => tester
+        .widget<MouseRegion>(
+          find
+              .descendant(
+                of: find.byType(AppToggle),
+                matching: find.byType(MouseRegion),
+              )
+              .first,
+        )
+        .cursor;
+    await tester.pumpWidget(
+      harness(AppToggle(value: false, onChanged: (_) {})),
+    );
+    expect(cursor(), SystemMouseCursors.click);
+    await tester.pumpWidget(
+      harness(const AppToggle(value: false, onChanged: null)),
+    );
+    expect(cursor(), SystemMouseCursors.basic);
+  });
 }

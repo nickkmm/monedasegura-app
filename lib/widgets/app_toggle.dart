@@ -23,26 +23,31 @@ class AppToggle extends StatelessWidget {
     final onChanged = this.onChanged;
     return Semantics(
       toggled: value,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onChanged == null ? null : () => onChanged(!value),
-        child: Container(
-          width: _width,
-          height: _height,
-          padding: const EdgeInsets.all(_inset),
-          decoration: BoxDecoration(
-            color: value ? AppColors.bgInverse : AppColors.borderStrong,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          child: AnimatedAlign(
-            duration: const Duration(milliseconds: 150),
-            alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-            child: Container(
-              width: _knob,
-              height: _knob,
-              decoration: const BoxDecoration(
-                color: AppColors.bgSurface,
-                shape: BoxShape.circle,
+      child: MouseRegion(
+        cursor: onChanged == null
+            ? SystemMouseCursors.basic
+            : SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onChanged == null ? null : () => onChanged(!value),
+          child: Container(
+            width: _width,
+            height: _height,
+            padding: const EdgeInsets.all(_inset),
+            decoration: BoxDecoration(
+              color: value ? AppColors.bgInverse : AppColors.borderStrong,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: AnimatedAlign(
+              duration: const Duration(milliseconds: 150),
+              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                width: _knob,
+                height: _knob,
+                decoration: const BoxDecoration(
+                  color: AppColors.bgSurface,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
           ),

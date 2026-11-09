@@ -26,40 +26,45 @@ class AppSegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final onChanged = this.onChanged;
-    return Container(
-      padding: const EdgeInsets.all(_padding),
-      decoration: BoxDecoration(
-        color: AppColors.bgSubtle,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final (value, label) in options)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onChanged == null ? null : () => onChanged(value),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: value == selected ? AppColors.bgSurface : null,
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  boxShadow: value == selected ? AppShadows.sm : null,
-                ),
-                child: Text(
-                  label,
-                  style: AppTextStyles.bodyStrong.copyWith(
-                    color: value == selected
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
+    return MouseRegion(
+      cursor: onChanged == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
+      child: Container(
+        padding: const EdgeInsets.all(_padding),
+        decoration: BoxDecoration(
+          color: AppColors.bgSubtle,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (value, label) in options)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onChanged == null ? null : () => onChanged(value),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: value == selected ? AppColors.bgSurface : null,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    boxShadow: value == selected ? AppShadows.sm : null,
+                  ),
+                  child: Text(
+                    label,
+                    style: AppTextStyles.bodyStrong.copyWith(
+                      color: value == selected
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
