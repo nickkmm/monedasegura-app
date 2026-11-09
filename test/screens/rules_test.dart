@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:monedasegura_app/app/app_scope.dart';
 import 'package:monedasegura_app/app/routes.dart';
+import 'package:monedasegura_app/data/app_store.dart';
 import 'package:monedasegura_app/data/models/models.dart';
 import 'package:monedasegura_app/screens/rules/rule_editor_screen.dart';
 import 'package:monedasegura_app/screens/rules/rules_page.dart';
@@ -49,6 +51,9 @@ List<String> _visibleCodes(WidgetTester tester) => [
 Finder get _legend => find
     .ancestor(of: find.text('Ciclo de vida:'), matching: find.byType(Row))
     .first;
+
+AppStore _store(WidgetTester tester) =>
+    AppScope.read(tester.element(find.byType(RulesPage)));
 
 Future<void> _tapTab(WidgetTester tester, String label) async {
   await tester.tap(find.text(label));
@@ -108,15 +113,8 @@ Future<void> _pumpPage(
 }
 
 void main() {
-  // The default test font draws every glyph as a square, which makes the
-  // "Pendiente" badge wider than its 130 px cell; measure with Inter.
-  setUpAll(() async {
-    final loader = FontLoader('Inter');
-    for (final weight in ['Regular', 'Medium', 'SemiBold']) {
-      loader.addFont(rootBundle.load('assets/fonts/Inter-$weight.ttf'));
-    }
-    await loader.load();
-  });
+  // The "Pendiente" badge overflows its 130 px cell in the default test font.
+  setUpAll(loadInterFont);
 
   group('the list', () {
     testWidgets(
@@ -295,6 +293,80 @@ void main() {
       ];
       expect(lefts, [...lefts]..sort());
     });
+  });
+
+  group('the "Actualizada" column', () {
+    const fullValues = {
+      'SCORE_BLOCK': 'hace 9 d · Laura Méndez',
+      'SCORE_REVIEW': 'hace 3 d · Laura Méndez',
+      'HIGH_AMOUNT_NEW_DEVICE': 'hace 12 d · Diego Salazar',
+      'VELOCITY_1H': 'hace 20 d · Diego Salazar',
+      'FAR_FROM_HOME': 'ayer · Laura Méndez',
+      'NIGHT_TRANSFER': 'hoy · Laura Méndez',
+      'ATO_PASSWORD_RESET': 'hoy · Diego Salazar',
+      'VELOCITY_5M': 'hace 2 meses · Laura Méndez',
+    };
+
+    bool truncated(WidgetTester tester, Finder text) =>
+        tester.renderObject<RenderParagraph>(text).didExceedMaxLines;
+
+    Future<void> pumpAtWidth(WidgetTester tester, double width) async {
+      await pumpApp(tester, signInAs: _valentina, initialRoute: '/rules');
+      tester.view.physicalSize = Size(width, 900);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    }
+
+    for (final width in [1000.0, 1280.0, 1366.0, 1417.0]) {
+      testWidgets('at $width wide shows only the date, in full', (
+        tester,
+      ) async {
+        await pumpAtWidth(tester, width);
+        expect(truncated(tester, find.text('Actualizada')), isFalse);
+        for (final MapEntry(key: code, value: full) in fullValues.entries) {
+          final date = find.descendant(
+            of: _rowOf(code),
+            matching: find.text(full.split(' · ').first),
+          );
+          expect(date, findsOneWidget, reason: code);
+          expect(truncated(tester, date), isFalse, reason: code);
+          expect(find.text(full), findsNothing, reason: code);
+          // The header and the values stay in the same column.
+          expect(
+            tester.getTopRight(date).dx,
+            tester.getTopRight(find.text('Actualizada')).dx,
+            reason: code,
+          );
+          for (final text in [
+            code,
+            _store(tester).ruleByCode(code)!.rule.description,
+          ]) {
+            expect(truncated(tester, find.text(text)), isFalse, reason: text);
+          }
+        }
+      });
+    }
+
+    for (final width in [1418.0, 1440.0]) {
+      testWidgets('at $width wide keeps the date and the author, in full', (
+        tester,
+      ) async {
+        await pumpAtWidth(tester, width);
+        for (final MapEntry(key: code, value: full) in fullValues.entries) {
+          final value = find.descendant(
+            of: _rowOf(code),
+            matching: find.text(full),
+          );
+          expect(value, findsOneWidget, reason: code);
+          expect(truncated(tester, value), isFalse, reason: code);
+          expect(
+            tester.getTopRight(value).dx,
+            tester.getTopRight(find.text('Actualizada')).dx,
+            reason: code,
+          );
+        }
+      });
+    }
   });
 
   group('navigation', () {

@@ -16,13 +16,24 @@ import 'rule_status_badge.dart';
 /// [rule] is the rule to show; the row reads `rule.latest`. [now] is the
 /// reference time for the last change ("hoy", "ayer"). [onTap] is called
 /// on tap; `null` makes the row read-only (no click cursor, no tap
-/// handling).
+/// handling). [compact] is for narrow tables: the last change shows only the
+/// date, in a column of [compactDateWidth], and the rule column takes the
+/// remaining space instead of its fixed 300 px.
 class RuleRow extends StatefulWidget {
-  const RuleRow({super.key, required this.rule, required this.now, this.onTap});
+  const RuleRow({
+    super.key,
+    required this.rule,
+    required this.now,
+    this.onTap,
+    this.compact = false,
+  });
+
+  static const double compactDateWidth = 84;
 
   final RuleView rule;
   final DateTime now;
   final VoidCallback? onTap;
+  final bool compact;
 
   @override
   State<RuleRow> createState() => _RuleRowState();
@@ -40,6 +51,10 @@ class _RuleRowState extends State<RuleRow> {
     final enabled = widget.onTap != null;
     final backtest = latest.backtest;
     final hits = latest.hits7d == null ? '—' : formatInt(latest.hits7d!);
+    final date = formatDayAgo(
+      latest.submittedAt ?? latest.createdAt,
+      widget.now,
+    );
     final precision =
         backtest == null ||
             latest.status == RuleStatus.RETIRED ||
@@ -50,6 +65,31 @@ class _RuleRowState extends State<RuleRow> {
       color: AppColors.textPrimary,
     );
     const gap = SizedBox(width: AppSpacing.lg);
+    final ruleCell = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          rule.code,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: strong,
+        ),
+        Text(
+          rule.description,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+        ),
+      ],
+    );
+    Widget lastChange(String text) => Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.right,
+      style: AppTextStyles.caption.copyWith(color: AppColors.textTertiary),
+    );
 
     return MouseRegion(
       cursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
@@ -69,29 +109,10 @@ class _RuleRowState extends State<RuleRow> {
           ),
           child: Row(
             children: [
-              SizedBox(
-                width: 300,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      rule.code,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: strong,
-                    ),
-                    Text(
-                      rule.description,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              if (widget.compact)
+                Expanded(child: ruleCell)
+              else
+                SizedBox(width: 300, child: ruleCell),
               gap,
               SizedBox(
                 width: 56,
@@ -135,18 +156,15 @@ class _RuleRowState extends State<RuleRow> {
                 ),
               ),
               gap,
-              Expanded(
-                child: Text(
-                  '${formatDayAgo(latest.submittedAt ?? latest.createdAt, widget.now)}'
-                  ' · ${latest.createdBy.fullName}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
+              if (widget.compact)
+                SizedBox(
+                  width: RuleRow.compactDateWidth,
+                  child: lastChange(date),
+                )
+              else
+                Expanded(
+                  child: lastChange('$date · ${latest.createdBy.fullName}'),
                 ),
-              ),
               gap,
               Icon(
                 AppIcons.chevronRight,
