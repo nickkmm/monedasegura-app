@@ -14,6 +14,7 @@ abstract final class AppSpacing {
 
 /// Corner radii in logical pixels.
 abstract final class AppRadius {
+  static const double xs = 4;
   static const double sm = 6;
   static const double md = 10;
   static const double lg = 14;
