@@ -18,6 +18,15 @@ void main() {
       expect(formatDecimal(0.5189), '0,52');
     });
 
+    test('formatTrimmed uses a decimal comma and drops trailing zeros', () {
+      expect(formatTrimmed(4.1), '4,1');
+      expect(formatTrimmed(412), '412');
+      expect(formatTrimmed(3), '3');
+      expect(formatTrimmed(2.5), '2,5');
+      expect(formatTrimmed(2.50), '2,5');
+      expect(formatTrimmed(1.234), '1,23');
+    });
+
     test('formatScore has 2 digits, or an em dash when null', () {
       expect(formatScore(0.674), '0,67');
       expect(formatScore(null), '—');

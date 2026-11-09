@@ -1,6 +1,7 @@
 export 'app_avatar.dart';
 export 'app_banner.dart';
 export 'app_button.dart';
+export 'app_card.dart';
 export 'app_shell.dart';
 export 'app_sidebar.dart';
 export 'app_tab.dart';
