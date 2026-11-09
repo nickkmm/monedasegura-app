@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'login_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const MonedaSeguraApp());
@@ -19,10 +20,7 @@ class MonedaSeguraApp extends StatelessWidget {
       locale: const Locale('es', 'CO'),
       supportedLocales: const [Locale('es', 'CO')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF4453C9),
-        useMaterial3: true,
-      ),
+      theme: buildAppTheme(),
       home: const LoginScreen(),
     );
   }
