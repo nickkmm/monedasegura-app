@@ -1,3 +1,5 @@
+import 'models/models.dart';
+
 const _months = [
   'ene',
   'feb',
@@ -58,6 +60,50 @@ String formatConditionValue(String feature, Object value) => switch (value) {
   List<Object?> v => v.join(', '),
   _ => value.toString(),
 };
+
+/// A rule condition's value as typed: `true`, `2000000`, `0.6`, `a, b`.
+String conditionValueText(Object value) => switch (value) {
+  num v when v == v.truncate() => v.toInt().toString(),
+  num v => v.toString(),
+  List<Object?> v => v.join(', '),
+  _ => value.toString(),
+};
+
+final _numberText = RegExp(r'^(\d{1,3}(\.\d{3})*|\d+)(,\d+)?$');
+
+/// Reads the typed [text] of a condition on [feature] with [op], by the
+/// feature's type in [featureCatalog]: `sí` reads `true`, `1.000.000` reads
+/// `1000000`, `0,6` reads `0.6` and `WEB, APP` under `in` reads a list.
+/// Text that doesn't parse comes back as is, so the condition is incomplete.
+Object parseConditionValue(String feature, ConditionOp op, String text) {
+  final trimmed = text.trim();
+  String? type;
+  for (final definition in featureCatalog) {
+    if (definition.name == feature) type = definition.type;
+  }
+  switch (type) {
+    case 'boolean':
+      return switch (trimmed.toLowerCase()) {
+        'sí' || 'si' || 'true' => true,
+        'no' || 'false' => false,
+        _ => text,
+      };
+    case 'number' || 'integer':
+      if (!_numberText.hasMatch(trimmed)) return text;
+      final parts = trimmed.replaceAll('.', '').split(',');
+      return parts.length == 1
+          ? int.parse(parts.first)
+          : double.parse('${parts.first}.${parts.last}');
+    case 'string':
+      if (op != ConditionOp.inList) return trimmed.isEmpty ? text : trimmed;
+      final items = [
+        for (final item in trimmed.split(','))
+          if (item.trim().isNotEmpty) item.trim(),
+      ];
+      return items.isEmpty ? text : items;
+  }
+  return text;
+}
 
 String formatDayMonth(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 

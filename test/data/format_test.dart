@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:monedasegura_app/data/app_store.dart';
 import 'package:monedasegura_app/data/format.dart';
+import 'package:monedasegura_app/data/models/models.dart';
 
 void main() {
   group('numbers', () {
@@ -152,6 +154,55 @@ void main() {
     test('lists and strings read as written', () {
       expect(formatConditionValue('country', ['CO', 'PE']), 'CO, PE');
       expect(formatConditionValue('channel', 'WEB'), 'WEB');
+    });
+  });
+
+  group('parseConditionValue', () {
+    const gte = ConditionOp.gte;
+    const eq = ConditionOp.eq;
+
+    test('booleans read sí, si, true, no and false in any case', () {
+      for (final text in ['sí', 'Sí', ' si ', 'TRUE']) {
+        expect(parseConditionValue('is_night', eq, text), true, reason: text);
+      }
+      for (final text in ['no', 'NO', 'false']) {
+        expect(parseConditionValue('is_night', eq, text), false, reason: text);
+      }
+      expect(parseConditionValue('is_night', eq, 'quizás'), 'quizás');
+    });
+
+    test('numbers take dot thousands and a decimal comma', () {
+      expect(parseConditionValue('amount', gte, '1.000.000'), 1000000);
+      expect(parseConditionValue('amount', gte, '1.000.000'), isA<int>());
+      expect(parseConditionValue('amount', gte, '2500'), 2500);
+      expect(parseConditionValue('score', gte, '0,6'), 0.6);
+      expect(parseConditionValue('tx_count_5m', gte, '3'), 3);
+      expect(parseConditionValue('amount', gte, '1.00'), '1.00');
+      expect(parseConditionValue('amount', gte, 'mucho'), 'mucho');
+    });
+
+    test('strings split on commas under in', () {
+      expect(
+        parseConditionValue('category', ConditionOp.inList, ' QR, PSE ,'),
+        ['QR', 'PSE'],
+      );
+      expect(parseConditionValue('category', eq, ' WEB '), 'WEB');
+      expect(parseConditionValue('category', ConditionOp.inList, ' , '), ' , ');
+    });
+
+    test('empty text comes back as is, so the condition is incomplete', () {
+      final value = parseConditionValue('amount', gte, '');
+      expect(value, '');
+      expect(isValidCondition(Condition('amount', gte, value)), isFalse);
+      expect(parseConditionValue('is_night', eq, ''), '');
+      expect(parseConditionValue('unknown', eq, '3'), '3');
+    });
+
+    test('conditionValueText writes values as typed', () {
+      expect(conditionValueText(true), 'true');
+      expect(conditionValueText(2000000), '2000000');
+      expect(conditionValueText(0.6), '0.6');
+      expect(conditionValueText(['WEB', 'APP']), 'WEB, APP');
     });
   });
 }

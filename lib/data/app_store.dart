@@ -17,7 +17,8 @@ const _defaultBlockThreshold = 0.9;
 /// Above every number in the seed, so a new id never repeats a seeded one.
 const _firstRecordNumber = 1000;
 
-final _ruleCodePattern = RegExp(r'^[A-Z][A-Z0-9_]{2,39}$');
+/// What a rule code looks like: `NIGHT_TRANSFER`.
+final ruleCodePattern = RegExp(r'^[A-Z][A-Z0-9_]{2,39}$');
 
 /// The queue order of `model.md` §7: BLOCK first, then score descending with
 /// null last, then oldest first.
@@ -42,7 +43,7 @@ double _plusOnePoint(double metric) => ((metric + 0.01) * 100).round() / 100;
 double _twoDecimals(double value) => (value * 100).round() / 100;
 
 /// `in` takes a list of strings, and `=` and `!=` on a string take one string.
-bool _isValidCondition(Condition condition) {
+bool isValidCondition(Condition condition) {
   final op = condition.op;
   final value = condition.value;
   final isEquality = op == ConditionOp.eq || op == ConditionOp.neq;
@@ -65,7 +66,7 @@ void _requireValidConditions(List<Condition> conditions) {
     throw const DomainError('invalid', 'A rule needs at least one condition');
   }
   for (final condition in conditions) {
-    if (!_isValidCondition(condition)) {
+    if (!isValidCondition(condition)) {
       throw DomainError('invalid', 'Invalid condition on ${condition.feature}');
     }
   }
@@ -456,7 +457,7 @@ class AppStore extends ChangeNotifier {
     if (ruleByCode(code) != null) {
       throw DomainError('conflict', 'Rule code $code is taken');
     }
-    if (!_ruleCodePattern.hasMatch(code)) {
+    if (!ruleCodePattern.hasMatch(code)) {
       throw DomainError('invalid', 'Invalid rule code $code');
     }
     if (name.isEmpty || name.length > _maxRuleNameLength) {
