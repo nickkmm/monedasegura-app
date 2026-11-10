@@ -119,4 +119,57 @@ void main() {
     await tester.pumpAndSettle();
     expect(feature, 'is_night');
   });
+
+  testWidgets('error turns the value border red', (tester) async {
+    await setDesktopView(tester);
+    Color borderOf() {
+      final box = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.byType(TextField),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      return ((box.decoration! as BoxDecoration).border! as Border).top.color;
+    }
+
+    Widget row({required bool error}) => harness(
+      _sized(
+        ConditionRow(
+          condition: const Condition('amount', ConditionOp.gte, ''),
+          editable: true,
+          onValueChanged: (_) {},
+          error: error,
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(row(error: false));
+    expect(borderOf(), AppColors.borderDefault);
+
+    await tester.pumpWidget(row(error: true));
+    expect(borderOf(), AppColors.statusBlock);
+  });
+
+  testWidgets('typed text that reads as the new value is kept', (tester) async {
+    await setDesktopView(tester);
+    Widget row(Object value) => harness(
+      _sized(
+        ConditionRow(
+          condition: Condition('amount', ConditionOp.gte, value),
+          editable: true,
+          onValueChanged: (_) {},
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(row(''));
+    await tester.enterText(find.byType(TextField), '1.000');
+    await tester.pumpWidget(row(1000));
+    expect(find.widgetWithText(TextField, '1.000'), findsOneWidget);
+
+    await tester.pumpWidget(row(2000));
+    expect(find.widgetWithText(TextField, '2000'), findsOneWidget);
+  });
 }
