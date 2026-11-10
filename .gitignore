@@ -15,3 +15,5 @@ pubspec_overrides.yaml
 # Software factory: runtime state and job worktrees (local only)
 /factory/jobs/
 /.worktrees/
+# Widget Preview related
+.widget_preview/
