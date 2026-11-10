@@ -115,7 +115,7 @@ void main() {
         initialRoute: AppRoutes.dashboard,
       );
       await _push(tester, AppRoutes.newRule);
-      expect(_title(tester), 'Regla');
+      expect(_title(tester), 'Nueva regla');
       expect(_routeName(tester), AppRoutes.newRule);
       expect(
         tester.widget<RuleEditorScreen>(find.byType(RuleEditorScreen)).ruleId,
