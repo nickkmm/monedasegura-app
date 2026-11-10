@@ -10,8 +10,9 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/widgets.dart';
 
 /// The rule editor content for one version: the stepper, the condition, the
-/// backtest, the approval timeline and the versions. Shows only what it is
-/// given and reports every action up.
+/// backtest, the approval timeline and the versions. With no [view] it is the
+/// new-rule form instead. Shows only what it is given and reports every
+/// action and edit up.
 class RuleEditorPage extends StatelessWidget {
   const RuleEditorPage({
     super.key,
@@ -30,12 +31,34 @@ class RuleEditorPage extends StatelessWidget {
     required this.onApprove,
     required this.onReject,
     required this.onNewVersion,
+    this.draftConditions,
+    this.draftAction = RuleAction.REVIEW,
+    this.dirty = false,
+    this.conditionErrors = const [],
+    this.showConditionsError = false,
+    required this.onFeatureChanged,
+    required this.onOpChanged,
+    required this.onValueChanged,
+    required this.onRemoveCondition,
+    required this.onAddCondition,
+    required this.onActionChanged,
+    required this.onSaveDraft,
+    required this.onDiscardDraft,
+    required this.onCreateRule,
+    this.codeController,
+    this.nameController,
+    this.descriptionController,
+    this.codeError,
+    this.nameError,
+    this.onCodeChanged,
+    this.onNameChanged,
   });
 
-  final RuleView view;
+  /// The rule, or `null` for the new-rule form.
+  final RuleView? view;
 
-  /// The selected version.
-  final RuleVersion version;
+  /// The selected version, or `null` for the new-rule form.
+  final RuleVersion? version;
   final DateTime now;
 
   /// The user who created [version], for the role label.
@@ -55,10 +78,59 @@ class RuleEditorPage extends StatelessWidget {
   final ValueChanged<String> onReject;
   final VoidCallback onNewVersion;
 
+  /// The conditions being edited, or `null` when the condition is read-only.
+  final List<Condition>? draftConditions;
+  final RuleAction draftAction;
+
+  /// Whether the edited conditions or action differ from the saved ones.
+  final bool dirty;
+
+  /// Per edited condition, whether its value box shows the error border.
+  final List<bool> conditionErrors;
+
+  /// Whether to show the incomplete conditions message.
+  final bool showConditionsError;
+
+  final void Function(int index, String name) onFeatureChanged;
+  final void Function(int index, ConditionOp op) onOpChanged;
+  final void Function(int index, String text) onValueChanged;
+  final ValueChanged<int> onRemoveCondition;
+  final VoidCallback onAddCondition;
+  final ValueChanged<RuleAction> onActionChanged;
+  final VoidCallback onSaveDraft;
+  final VoidCallback onDiscardDraft;
+  final VoidCallback onCreateRule;
+
+  /// The new-rule fields and their errors.
+  final TextEditingController? codeController;
+  final TextEditingController? nameController;
+  final TextEditingController? descriptionController;
+  final String? codeError;
+  final String? nameError;
+  final ValueChanged<String>? onCodeChanged;
+  final ValueChanged<String>? onNameChanged;
+
   static const double _sideWidth = 360;
 
   @override
   Widget build(BuildContext context) {
+    final view = this.view;
+    final version = this.version;
+    final conditionCard = _ConditionCard(
+      conditions: draftConditions ?? version?.conditions ?? const [],
+      action: draftConditions == null
+          ? version?.action ?? draftAction
+          : draftAction,
+      editable: draftConditions != null,
+      errors: conditionErrors,
+      showError: showConditionsError,
+      onFeatureChanged: onFeatureChanged,
+      onOpChanged: onOpChanged,
+      onValueChanged: onValueChanged,
+      onRemove: onRemoveCondition,
+      onAdd: onAddCondition,
+      onActionChanged: onActionChanged,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.xl,
@@ -72,7 +144,9 @@ class RuleEditorPage extends StatelessWidget {
               onPressed: onBack,
             ),
             const Spacer(),
-            AppStepper(steps: _steps(version, now)),
+            AppStepper(
+              steps: version == null ? _newRuleSteps : _steps(version, now),
+            ),
           ],
         ),
         Row(
@@ -84,13 +158,24 @@ class RuleEditorPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: AppSpacing.lg,
                 children: [
-                  _ConditionCard(version: version),
-                  _BacktestCard(
-                    version: version,
-                    now: now,
-                    canWrite: canWrite,
-                    onRunBacktest: onRunBacktest,
-                  ),
+                  if (view == null || version == null)
+                    _RuleDataCard(
+                      codeController: codeController,
+                      nameController: nameController,
+                      descriptionController: descriptionController,
+                      codeError: codeError,
+                      nameError: nameError,
+                      onCodeChanged: onCodeChanged,
+                      onNameChanged: onNameChanged,
+                    ),
+                  conditionCard,
+                  if (view != null && version != null)
+                    _BacktestCard(
+                      version: version,
+                      now: now,
+                      canWrite: canWrite,
+                      onRunBacktest: onRunBacktest,
+                    ),
                 ],
               ),
             ),
@@ -100,25 +185,33 @@ class RuleEditorPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: AppSpacing.lg,
                 children: [
-                  _ApprovalCard(
-                    view: view,
-                    version: version,
-                    now: now,
-                    creator: creator,
-                    approver: approver,
-                    canWrite: canWrite,
-                    canApprove: canApprove,
-                    onStartShadow: onStartShadow,
-                    onSubmit: onSubmit,
-                    onApprove: onApprove,
-                    onReject: onReject,
-                    onNewVersion: onNewVersion,
-                  ),
-                  _VersionsCard(
-                    view: view,
-                    selected: version.version,
-                    onSelectVersion: onSelectVersion,
-                  ),
+                  if (view == null || version == null)
+                    _CreateCard(onCreateRule: onCreateRule)
+                  else ...[
+                    _ApprovalCard(
+                      view: view,
+                      version: version,
+                      now: now,
+                      creator: creator,
+                      approver: approver,
+                      canWrite: canWrite,
+                      canApprove: canApprove,
+                      editing: draftConditions != null,
+                      dirty: dirty,
+                      onStartShadow: onStartShadow,
+                      onSubmit: onSubmit,
+                      onApprove: onApprove,
+                      onReject: onReject,
+                      onNewVersion: onNewVersion,
+                      onSaveDraft: onSaveDraft,
+                      onDiscardDraft: onDiscardDraft,
+                    ),
+                    _VersionsCard(
+                      view: view,
+                      selected: version.version,
+                      onSelectVersion: onSelectVersion,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -133,6 +226,17 @@ int _shadowDays(ShadowStats stats, DateTime now) =>
     now.difference(stats.since).inDays;
 
 String _daysText(int days) => days == 1 ? '1 día' : '$days días';
+
+const List<(String, StepperStepState)> _newRuleSteps = [
+  ('Borrador', StepperStepState.current),
+  ('Shadow', StepperStepState.pending),
+  ('Aprobación', StepperStepState.pending),
+  ('Activa', StepperStepState.pending),
+];
+
+final List<String> _featureNames = [
+  for (final feature in featureCatalog) feature.name,
+];
 
 List<(String, StepperStepState)> _steps(RuleVersion version, DateTime now) {
   const done = StepperStepState.done;
@@ -196,10 +300,33 @@ class _Caption extends StatelessWidget {
   }
 }
 
+/// The condition rows and the action; editable rows report every edit up.
 class _ConditionCard extends StatelessWidget {
-  const _ConditionCard({required this.version});
+  const _ConditionCard({
+    required this.conditions,
+    required this.action,
+    required this.editable,
+    required this.errors,
+    required this.showError,
+    required this.onFeatureChanged,
+    required this.onOpChanged,
+    required this.onValueChanged,
+    required this.onRemove,
+    required this.onAdd,
+    required this.onActionChanged,
+  });
 
-  final RuleVersion version;
+  final List<Condition> conditions;
+  final RuleAction action;
+  final bool editable;
+  final List<bool> errors;
+  final bool showError;
+  final void Function(int index, String name) onFeatureChanged;
+  final void Function(int index, ConditionOp op) onOpChanged;
+  final void Function(int index, String text) onValueChanged;
+  final ValueChanged<int> onRemove;
+  final VoidCallback onAdd;
+  final ValueChanged<RuleAction> onActionChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -212,8 +339,38 @@ class _ConditionCard extends StatelessWidget {
             title: 'Condición',
             caption: 'Se cumple cuando se cumplen todas',
           ),
-          for (final condition in version.conditions)
-            ConditionRow(condition: condition),
+          if (!editable)
+            for (final condition in conditions)
+              ConditionRow(condition: condition)
+          else ...[
+            for (final (i, condition) in conditions.indexed)
+              ConditionRow(
+                condition: condition,
+                editable: true,
+                featureNames: _featureNames,
+                error: i < errors.length && errors[i],
+                onFeatureChanged: (name) => onFeatureChanged(i, name),
+                onOpChanged: (op) => onOpChanged(i, op),
+                onValueChanged: (text) => onValueChanged(i, text),
+                onRemove: () => onRemove(i),
+              ),
+            if (showError)
+              Text(
+                'Completa todas las condiciones antes de guardar.',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.statusBlock,
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: AppButton(
+                label: 'Agregar condición',
+                icon: AppIcons.plus,
+                variant: AppButtonVariant.ghost,
+                onPressed: onAdd,
+              ),
+            ),
+          ],
           Row(
             spacing: AppSpacing.md,
             children: [
@@ -228,10 +385,91 @@ class _ConditionCard extends StatelessWidget {
                   (RuleAction.REVIEW, RuleAction.REVIEW.label),
                   (RuleAction.BLOCK, RuleAction.BLOCK.label),
                 ],
-                selected: version.action,
-                onChanged: null,
+                selected: action,
+                onChanged: editable ? onActionChanged : null,
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The new rule's code, name and description.
+class _RuleDataCard extends StatelessWidget {
+  const _RuleDataCard({
+    required this.codeController,
+    required this.nameController,
+    required this.descriptionController,
+    required this.codeError,
+    required this.nameError,
+    required this.onCodeChanged,
+    required this.onNameChanged,
+  });
+
+  final TextEditingController? codeController;
+  final TextEditingController? nameController;
+  final TextEditingController? descriptionController;
+  final String? codeError;
+  final String? nameError;
+  final ValueChanged<String>? onCodeChanged;
+  final ValueChanged<String>? onNameChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.lg,
+        children: [
+          const _CardTitle(title: 'Datos de la regla'),
+          AppTextField(
+            label: 'Código',
+            controller: codeController,
+            hintText: 'VELOCITY_5M',
+            errorText: codeError,
+            onChanged: onCodeChanged,
+          ),
+          AppTextField(
+            label: 'Nombre',
+            controller: nameController,
+            hintText: 'Transferencia nocturna de monto alto',
+            errorText: nameError,
+            onChanged: onNameChanged,
+          ),
+          AppTextField(
+            label: 'Descripción',
+            controller: descriptionController,
+            hintText: 'Transferencia de noche ≥ \$ 2.000.000',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The new rule's only action: creating it as draft v1.
+class _CreateCard extends StatelessWidget {
+  const _CreateCard({required this.onCreateRule});
+
+  final VoidCallback onCreateRule;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.sm,
+        children: [
+          AppButton(
+            label: 'Crear borrador',
+            expand: true,
+            onPressed: onCreateRule,
+          ),
+          const _Caption(
+            'La regla se crea como borrador v1. Después podrás correr el '
+            'backtest e iniciar shadow.',
           ),
         ],
       ),
@@ -383,11 +621,15 @@ class _ApprovalCard extends StatelessWidget {
     required this.approver,
     required this.canWrite,
     required this.canApprove,
+    required this.editing,
+    required this.dirty,
     required this.onStartShadow,
     required this.onSubmit,
     required this.onApprove,
     required this.onReject,
     required this.onNewVersion,
+    required this.onSaveDraft,
+    required this.onDiscardDraft,
   });
 
   final RuleView view;
@@ -397,11 +639,17 @@ class _ApprovalCard extends StatelessWidget {
   final AppUser? approver;
   final bool canWrite;
   final bool canApprove;
+
+  /// Whether the draft is being edited, which adds save and discard.
+  final bool editing;
+  final bool dirty;
   final VoidCallback onStartShadow;
   final VoidCallback onSubmit;
   final VoidCallback onApprove;
   final ValueChanged<String> onReject;
   final VoidCallback onNewVersion;
+  final VoidCallback onSaveDraft;
+  final VoidCallback onDiscardDraft;
 
   String _createdMeta() {
     final date = formatDayMonth(version.createdAt);
@@ -458,8 +706,16 @@ class _ApprovalCard extends StatelessWidget {
     if (reason != null) onReject(reason);
   }
 
+  Future<void> _openDiscardDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => const _DiscardDialog(),
+    );
+    if (confirmed ?? false) onDiscardDraft();
+  }
+
   /// The lifecycle action for users with `RULE_WRITE`, if this version has one.
-  Widget? _writeAction() {
+  Widget? _writeAction(BuildContext context) {
     final status = version.status;
     if (status == RuleStatus.SHADOW) {
       final hasBacktest = version.backtest != null;
@@ -478,10 +734,31 @@ class _ApprovalCard extends StatelessWidget {
       );
     }
     if (status == RuleStatus.DRAFT) {
-      return AppButton(
+      final startShadow = AppButton(
         label: 'Iniciar shadow',
         expand: true,
-        onPressed: onStartShadow,
+        onPressed: dirty ? null : onStartShadow,
+      );
+      if (!editing) return startShadow;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.sm,
+        children: [
+          startShadow,
+          AppButton(
+            label: 'Guardar borrador',
+            variant: AppButtonVariant.secondary,
+            expand: true,
+            onPressed: dirty ? onSaveDraft : null,
+          ),
+          if (version.rejectionReason == null)
+            AppButton(
+              label: 'Descartar borrador',
+              variant: AppButtonVariant.danger,
+              expand: true,
+              onPressed: () => _openDiscardDialog(context),
+            ),
+        ],
       );
     }
     final inProgress = view.versions.any(
@@ -505,7 +782,7 @@ class _ApprovalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final approver = this.approver;
-    final writeAction = canWrite ? _writeAction() : null;
+    final writeAction = canWrite ? _writeAction(context) : null;
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -629,6 +906,57 @@ class _RejectDialogState extends State<_RejectDialog> {
                     onPressed: _reason.isEmpty
                         ? null
                         : () => navigator.pop(_reason),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Confirms discarding a draft, and pops `true` when confirmed.
+class _DiscardDialog extends StatelessWidget {
+  const _DiscardDialog();
+
+  static const double _width = 420;
+
+  @override
+  Widget build(BuildContext context) {
+    final navigator = Navigator.of(context);
+    return Dialog(
+      backgroundColor: AppColors.bgSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: SizedBox(
+        width: _width,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.lg,
+            children: [
+              const _CardTitle(
+                title: '¿Descartar este borrador?',
+                caption: 'Esta versión se elimina y no se puede recuperar.',
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                spacing: AppSpacing.sm,
+                children: [
+                  AppButton(
+                    label: 'Cancelar',
+                    variant: AppButtonVariant.ghost,
+                    onPressed: navigator.pop,
+                  ),
+                  AppButton(
+                    label: 'Descartar',
+                    variant: AppButtonVariant.danger,
+                    onPressed: () => navigator.pop(true),
                   ),
                 ],
               ),

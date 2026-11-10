@@ -16,7 +16,8 @@ import '../theme/app_text_styles.dart';
 /// current feature is always included). [onFeatureChanged],
 /// [onOpChanged] and [onValueChanged] report the new feature, operator and
 /// raw value text; [onRemove] is called by the remove icon. A `null`
-/// callback disables that control.
+/// callback disables that control. [error] marks the value incomplete: its
+/// box gets the red border of an `AppTextField` error.
 class ConditionRow extends StatefulWidget {
   const ConditionRow({
     super.key,
@@ -27,6 +28,7 @@ class ConditionRow extends StatefulWidget {
     this.onOpChanged,
     this.onValueChanged,
     this.onRemove,
+    this.error = false,
   });
 
   final Condition condition;
@@ -36,6 +38,7 @@ class ConditionRow extends StatefulWidget {
   final ValueChanged<ConditionOp>? onOpChanged;
   final ValueChanged<String>? onValueChanged;
   final VoidCallback? onRemove;
+  final bool error;
 
   @override
   State<ConditionRow> createState() => _ConditionRowState();
@@ -47,14 +50,21 @@ class _ConditionRowState extends State<ConditionRow> {
   static const double _opWidth = 90;
 
   late final TextEditingController _value = TextEditingController(
-    text: _rawValue(widget.condition.value),
+    text: conditionValueText(widget.condition.value),
   );
 
   @override
   void didUpdateWidget(ConditionRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final raw = _rawValue(widget.condition.value);
-    if (raw != _rawValue(oldWidget.condition.value) && raw != _value.text) {
+    final c = widget.condition;
+    final raw = conditionValueText(c.value);
+    // Typed text that already reads as the new value ("1.000" for 1000) stays.
+    final typed = conditionValueText(
+      parseConditionValue(c.feature, c.op, _value.text),
+    );
+    if (raw != conditionValueText(oldWidget.condition.value) &&
+        raw != _value.text &&
+        raw != typed) {
       _value.text = raw;
     }
   }
@@ -65,15 +75,7 @@ class _ConditionRowState extends State<ConditionRow> {
     super.dispose();
   }
 
-  /// The value as typed: `true`, `2000000`, `0.6`, `a, b`.
-  static String _rawValue(Object value) => switch (value) {
-    num v when v == v.truncate() => v.toInt().toString(),
-    num v => v.toString(),
-    List<Object?> v => v.join(', '),
-    _ => value.toString(),
-  };
-
-  Widget _box({required Widget child, double? width}) {
+  Widget _box({required Widget child, double? width, bool error = false}) {
     return Container(
       width: width,
       height: _height,
@@ -81,7 +83,9 @@ class _ConditionRowState extends State<ConditionRow> {
       alignment: Alignment.centerLeft,
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(
+          color: error ? AppColors.statusBlock : AppColors.borderDefault,
+        ),
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: child,
@@ -140,6 +144,7 @@ class _ConditionRowState extends State<ConditionRow> {
           gap,
           Expanded(
             child: _box(
+              error: widget.error,
               child: plain(formatConditionValue(c.feature, c.value), textStyle),
             ),
           ),
@@ -176,6 +181,7 @@ class _ConditionRowState extends State<ConditionRow> {
         gap,
         Expanded(
           child: _box(
+            error: widget.error,
             child: TextField(
               controller: _value,
               enabled: widget.onValueChanged != null,

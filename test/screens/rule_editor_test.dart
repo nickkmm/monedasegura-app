@@ -147,6 +147,15 @@ Future<_Recorder> _pumpPage(
             onApprove: () => recorder.approved++,
             onReject: recorder.rejected.add,
             onNewVersion: () {},
+            onFeatureChanged: (_, _) {},
+            onOpChanged: (_, _) {},
+            onValueChanged: (_, _) {},
+            onRemoveCondition: (_) {},
+            onAddCondition: () {},
+            onActionChanged: (_) {},
+            onSaveDraft: () {},
+            onDiscardDraft: () {},
+            onCreateRule: () {},
           ),
         ),
       ),
@@ -551,7 +560,7 @@ void main() {
   });
 
   group('empty states', () {
-    testWidgets('/rules/new is not available yet', (tester) async {
+    testWidgets('/rules/new opens the new-rule form', (tester) async {
       await pumpApp(
         tester,
         signInAs: _lauraMendez,
@@ -559,7 +568,8 @@ void main() {
       );
 
       expect(find.text('Nueva regla'), findsOneWidget);
-      expect(find.text('Disponible pronto.'), findsOneWidget);
+      expect(find.text('Datos de la regla'), findsOneWidget);
+      expect(_button('Crear borrador'), findsOneWidget);
     });
 
     testWidgets('an unknown rule offers the way back', (tester) async {
